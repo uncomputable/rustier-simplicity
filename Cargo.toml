@@ -1,0 +1,8 @@
+[package]
+name = "simplicity-playground"
+version = "0.1.0"
+edition = "2021"
+description = "Playground for getting familiar with the Simplicity language"
+authors = ["Christian Lewe"]
+
+[dependencies]
