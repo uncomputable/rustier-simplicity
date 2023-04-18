@@ -1,9 +1,9 @@
-use crate::types::{bit_to_value, byte_to_value, u64_to_value, Product, Sum, Unit};
+use crate::value::{bit_to_value, byte_to_value, u64_to_value, Product, Sum, Unit};
 
 mod combinator;
 mod display;
 #[allow(dead_code)]
-mod types;
+mod value;
 
 fn main() {
     // Unit value

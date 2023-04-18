@@ -1,5 +1,5 @@
 use crate::combinator;
-use crate::types::{Product, Sum, Unit};
+use crate::value::{Product, Sum, Unit};
 use std::fmt;
 
 const INDENT_FACTOR: usize = 2;
