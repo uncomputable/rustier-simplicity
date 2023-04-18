@@ -1,5 +1,5 @@
 use crate::combinator;
-use crate::value::{Product, Sum, Unit};
+use crate::value::{Product, Sum, Unit, Value};
 use std::fmt;
 
 const INDENT_FACTOR: usize = 2;
@@ -109,11 +109,7 @@ macro_rules! impl_display_double {
 
 impl_display_leaf!(Unit, "unit");
 
-impl<A, B> DisplayDepth for Sum<A, B>
-where
-    A: DisplayDepth,
-    B: DisplayDepth,
-{
+impl<A: Value, B: Value> DisplayDepth for Sum<A, B> {
     fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Sum::Left(a) => fmt_depth_single("L", depth, f, a),
@@ -122,21 +118,13 @@ where
     }
 }
 
-impl<A, B> fmt::Display for Sum<A, B>
-where
-    A: DisplayDepth,
-    B: DisplayDepth,
-{
+impl<A: Value, B: Value> fmt::Display for Sum<A, B> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.fmt_depth(0, f)
     }
 }
 
-impl<A, B> DisplayDepth for Product<A, B>
-where
-    A: DisplayDepth,
-    B: DisplayDepth,
-{
+impl<A: Value, B: Value> DisplayDepth for Product<A, B> {
     fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Product::Product(a, b) => fmt_depth_double("", depth, f, a, b),
@@ -144,11 +132,7 @@ where
     }
 }
 
-impl<A, B> fmt::Display for Product<A, B>
-where
-    A: DisplayDepth,
-    B: DisplayDepth,
-{
+impl<A: Value, B: Value> fmt::Display for Product<A, B> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.fmt_depth(0, f)
     }

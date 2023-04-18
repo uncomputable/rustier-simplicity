@@ -1,3 +1,7 @@
+use crate::display::DisplayDepth;
+
+pub trait Value: DisplayDepth {}
+
 /// Atomic unit type.
 ///
 /// Unit values contain no information whatsoever.
@@ -13,7 +17,7 @@ pub enum Unit {
 /// Either a `Left` value wraps an inner value of type `A`,
 /// or a `Right` value wraps an inner value of type `B`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Sum<A, B> {
+pub enum Sum<A: Value, B: Value> {
     /// Left value
     Left(A),
     /// Right value
@@ -25,10 +29,16 @@ pub enum Sum<A, B> {
 /// The `Product` value wraps both a left inner value of type `A`
 /// and a right inner value of type `B`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Product<A, B> {
+pub enum Product<A: Value, B: Value> {
     /// Product value
     Product(A, B),
 }
+
+impl Value for Unit {}
+
+impl<A: Value, B: Value> Value for Sum<A, B> {}
+
+impl<A: Value, B: Value> Value for Product<A, B> {}
 
 /// Bits are sums of unit
 pub type Bit = Sum<Unit, Unit>;
