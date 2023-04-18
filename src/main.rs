@@ -1,5 +1,6 @@
 use crate::types::{bit_to_value, byte_to_value, u64_to_value, Product, Sum, Unit};
 
+mod combinator;
 mod display;
 #[allow(dead_code)]
 mod types;
