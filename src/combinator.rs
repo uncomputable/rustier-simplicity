@@ -5,11 +5,13 @@ pub trait Combinator: DisplayDepth {}
 /// Atomic unit combinator.
 ///
 /// Takes any input and returns the unit value.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Unit {}
 
 /// Atomic iden combinator (identity).
 ///
 /// Takes any input and returns it back.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Iden {}
 
 /// Take combinator (left projection).
@@ -19,6 +21,7 @@ pub struct Iden {}
 /// Takes an input `(a, b)` of type `A × B`,
 /// passes the left value `a` of type `A` to the inner combinator,
 /// and returns a value `c` of type `C`.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Take<A: Combinator> {
     pub inner: A,
 }
@@ -30,6 +33,7 @@ pub struct Take<A: Combinator> {
 /// Takes an input `(a, b)` of type `A × B`,
 /// passes the right value `b` of type `B` to the inner combinator,
 /// and returns a value `c` of type `C`.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Drop<A: Combinator> {
     pub inner: A,
 }
@@ -41,6 +45,7 @@ pub struct Drop<A: Combinator> {
 /// Takes an input `a` of type `A`,
 /// passes the value `a` to the inner combinator to obtain a value `b` of type `B`,
 /// and returns the value `L(b)` of type `B + C`.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Injl<A: Combinator> {
     pub inner: A,
 }
@@ -52,6 +57,7 @@ pub struct Injl<A: Combinator> {
 /// Takes an input `a` of type `A`,
 /// passes the value `a` to the inner combinator to obtain a value `c` of type `C`,
 /// and returns the value `R(c)` of type `B + C`.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Injr<A: Combinator> {
     pub inner: A,
 }
@@ -65,6 +71,7 @@ pub struct Injr<A: Combinator> {
 /// passes the value `a` to the left combinator to obtain a value `b` of type `B`,
 /// passes the value `a` to the right combinator to obtain a value `c` of type `C`,
 /// and returns the value `(b, c)` of type `B × C`.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Pair<A: Combinator, B: Combinator> {
     pub left: A,
     pub right: B,
@@ -79,6 +86,7 @@ pub struct Pair<A: Combinator, B: Combinator> {
 /// passes the value `a` to the left combinator to obtain a value `b` of type `B`,
 /// passes the value `b` to the the right combinator to obtain a value `c` of type `C`,
 /// and returns `c`.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Comp<A: Combinator, B: Combinator> {
     pub left: A,
     pub right: B,
@@ -98,6 +106,7 @@ pub struct Comp<A: Combinator, B: Combinator> {
 /// If `ab` looks like `R(b)` where value `b` is of type `B`,
 /// then it passes the value `(b, c)` to the right combinator to obtain a value `d` of type `D`
 /// and returns `d`.
+#[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Case<A: Combinator, B: Combinator> {
     pub left: A,
     pub right: B,
