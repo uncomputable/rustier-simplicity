@@ -1,9 +1,5 @@
-use crate::value::{bit_to_value, byte_to_value, u64_to_value, Product, Sum, Unit};
-
-mod combinator;
-mod display;
-#[allow(dead_code)]
-mod value;
+use simplicity_playground::value;
+use simplicity_playground::value::{Product, Sum, Unit};
 
 fn main() {
     // Unit value
@@ -34,17 +30,17 @@ fn main() {
     println!("Product value:\n{}\n", unit_times_unit);
 
     // Bit values
-    let false_bit = bit_to_value(false);
+    let false_bit = value::bit_to_value(false);
     println!("False bit value:\n{}\n", false_bit);
 
-    let true_bit = bit_to_value(true);
+    let true_bit = value::bit_to_value(true);
     println!("True bit value:\n{}\n", true_bit);
 
     // Byte values
-    let byte = byte_to_value(12);
+    let byte = value::byte_to_value(12);
     println!("Byte value:\n{}\n", byte);
 
     // Word values
-    let word = u64_to_value(1337);
+    let word = value::u64_to_value(1337);
     println!("Word value:\n{}", word);
 }
