@@ -266,3 +266,51 @@ where
         }
     }
 }
+
+pub fn unit<A: Value>() -> Unit<A> {
+    Unit { _i: PhantomData }
+}
+
+pub fn iden<A: Value>() -> Iden<A> {
+    Iden { _i: PhantomData }
+}
+
+pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
+    Take {
+        inner: t,
+        _i: PhantomData,
+    }
+}
+
+pub fn _drop<T: Combinator, A: Value>(t: T) -> Drop<T, A> {
+    Drop {
+        inner: t,
+        _i: PhantomData,
+    }
+}
+
+pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
+    Injl {
+        inner: t,
+        _i: PhantomData,
+    }
+}
+
+pub fn injr<T: Combinator, B: Value>(t: T) -> Injr<T, B> {
+    Injr {
+        inner: t,
+        _i: PhantomData,
+    }
+}
+
+pub fn pair<S: Combinator, T: Combinator>(s: S, t: T) -> Pair<S, T> {
+    Pair { left: s, right: t }
+}
+
+pub fn comp<S: Combinator, T: Combinator>(s: S, t: T) -> Comp<S, T> {
+    Comp { left: s, right: t }
+}
+
+pub fn case<S: Combinator, T: Combinator>(s: S, t: T) -> Case<S, T> {
+    Case { left: s, right: t }
+}
