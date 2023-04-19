@@ -14,16 +14,16 @@ pub trait Combinator: DisplayDepth {
 ///
 /// Takes any input and returns the unit value.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Unit<I: Value> {
-    _i: PhantomData<I>,
+pub struct Unit<A: Value> {
+    _i: PhantomData<A>,
 }
 
 /// Atomic iden combinator (identity).
 ///
 /// Takes any input and returns it back.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Iden<I: Value> {
-    _i: PhantomData<I>,
+pub struct Iden<A: Value> {
+    _i: PhantomData<A>,
 }
 
 /// Take combinator (left projection).
@@ -34,9 +34,9 @@ pub struct Iden<I: Value> {
 /// passes the left value `a` of type `A` to the inner combinator,
 /// and returns a value `c` of type `C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Take<A: Combinator, I: Value> {
-    pub inner: A,
-    _i: PhantomData<I>,
+pub struct Take<T: Combinator, B: Value> {
+    pub inner: T,
+    _i: PhantomData<B>,
 }
 
 /// Drop combinator (right projection).
@@ -47,9 +47,9 @@ pub struct Take<A: Combinator, I: Value> {
 /// passes the right value `b` of type `B` to the inner combinator,
 /// and returns a value `c` of type `C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Drop<A: Combinator, I: Value> {
-    pub inner: A,
-    _i: PhantomData<I>,
+pub struct Drop<T: Combinator, A: Value> {
+    pub inner: T,
+    _i: PhantomData<A>,
 }
 
 /// Injl combinator (left injection).
@@ -60,9 +60,9 @@ pub struct Drop<A: Combinator, I: Value> {
 /// passes the value `a` to the inner combinator to obtain a value `b` of type `B`,
 /// and returns the value `L(b)` of type `B + C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Injl<A: Combinator, I: Value> {
-    pub inner: A,
-    _i: PhantomData<I>,
+pub struct Injl<T: Combinator, C: Value> {
+    pub inner: T,
+    _i: PhantomData<C>,
 }
 
 /// Injr combinator (right injection).
@@ -73,9 +73,9 @@ pub struct Injl<A: Combinator, I: Value> {
 /// passes the value `a` to the inner combinator to obtain a value `c` of type `C`,
 /// and returns the value `R(c)` of type `B + C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Injr<A: Combinator, I: Value> {
-    pub inner: A,
-    _i: PhantomData<I>,
+pub struct Injr<T: Combinator, B: Value> {
+    pub inner: T,
+    _i: PhantomData<B>,
 }
 
 /// Pair combinator (product).
@@ -88,9 +88,9 @@ pub struct Injr<A: Combinator, I: Value> {
 /// passes the value `a` to the right combinator to obtain a value `c` of type `C`,
 /// and returns the value `(b, c)` of type `B × C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Pair<A: Combinator, B: Combinator> {
-    pub left: A,
-    pub right: B,
+pub struct Pair<S: Combinator, T: Combinator> {
+    pub left: S,
+    pub right: T,
 }
 
 /// Comp combinator (composition).
@@ -103,9 +103,9 @@ pub struct Pair<A: Combinator, B: Combinator> {
 /// passes the value `b` to the the right combinator to obtain a value `c` of type `C`,
 /// and returns `c`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Comp<A: Combinator, B: Combinator> {
-    pub left: A,
-    pub right: B,
+pub struct Comp<S: Combinator, T: Combinator> {
+    pub left: S,
+    pub right: T,
 }
 
 /// Case combinator (conditional).
@@ -123,16 +123,16 @@ pub struct Comp<A: Combinator, B: Combinator> {
 /// then it passes the value `(b, c)` to the right combinator to obtain a value `d` of type `D`
 /// and returns `d`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Case<A: Combinator, B: Combinator> {
-    pub left: A,
-    pub right: B,
+pub struct Case<S: Combinator, T: Combinator> {
+    pub left: S,
+    pub right: T,
 }
 
-impl<I> Combinator for Unit<I>
+impl<A> Combinator for Unit<A>
 where
-    I: Value,
+    A: Value,
 {
-    type In = I;
+    type In = A;
     type Out = value::Unit;
 
     fn exec(&self, _value: Self::In) -> Result<Self::Out, ()> {
@@ -140,25 +140,25 @@ where
     }
 }
 
-impl<I> Combinator for Iden<I>
+impl<A> Combinator for Iden<A>
 where
-    I: Value,
+    A: Value,
 {
-    type In = I;
-    type Out = I;
+    type In = A;
+    type Out = A;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         Ok(value)
     }
 }
 
-impl<A, I> Combinator for Take<A, I>
+impl<T, B> Combinator for Take<T, B>
 where
-    A: Combinator,
-    I: Value,
+    T: Combinator,
+    B: Value,
 {
-    type In = value::Product<A::In, I>;
-    type Out = A::Out;
+    type In = value::Product<T::In, B>;
+    type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         let (a, _) = value.split_product().ok_or(())?;
@@ -167,13 +167,13 @@ where
     }
 }
 
-impl<A, I> Combinator for Drop<A, I>
+impl<T, A> Combinator for Drop<T, A>
 where
-    A: Combinator,
-    I: Value,
+    T: Combinator,
+    A: Value,
 {
-    type In = value::Product<I, A::In>;
-    type Out = A::Out;
+    type In = value::Product<A, T::In>;
+    type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         let (_, b) = value.split_product().ok_or(())?;
@@ -182,13 +182,13 @@ where
     }
 }
 
-impl<A, I> Combinator for Injl<A, I>
+impl<T, C> Combinator for Injl<T, C>
 where
-    A: Combinator,
-    I: Value,
+    T: Combinator,
+    C: Value,
 {
-    type In = A::In;
-    type Out = value::Sum<A::Out, I>;
+    type In = T::In;
+    type Out = value::Sum<T::Out, C>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         let c = self.inner.exec(value)?;
@@ -196,13 +196,13 @@ where
     }
 }
 
-impl<A, I> Combinator for Injr<A, I>
+impl<T, B> Combinator for Injr<T, B>
 where
-    A: Combinator,
-    I: Value,
+    T: Combinator,
+    B: Value,
 {
-    type In = A::In;
-    type Out = value::Sum<I, A::Out>;
+    type In = T::In;
+    type Out = value::Sum<B, T::Out>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         let c = self.inner.exec(value)?;
@@ -210,13 +210,13 @@ where
     }
 }
 
-impl<A, B> Combinator for Pair<A, B>
+impl<S, T> Combinator for Pair<S, T>
 where
-    A: Combinator<In = B::In>,
-    B: Combinator,
+    S: Combinator<In = T::In>,
+    T: Combinator,
 {
-    type In = A::In;
-    type Out = value::Product<A::Out, B::Out>;
+    type In = S::In;
+    type Out = value::Product<S::Out, T::Out>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         let b = self.left.exec(value.clone())?;
@@ -225,13 +225,13 @@ where
     }
 }
 
-impl<A, B> Combinator for Comp<A, B>
+impl<S, T> Combinator for Comp<S, T>
 where
-    A: Combinator<Out = B::In>,
-    B: Combinator,
+    S: Combinator<Out = T::In>,
+    T: Combinator,
 {
-    type In = A::In;
-    type Out = B::Out;
+    type In = S::In;
+    type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         let b = self.left.exec(value)?;
@@ -240,24 +240,24 @@ where
     }
 }
 
-impl<A, B, I, J> Combinator for Case<A, B>
+impl<S, T, AC, BC> Combinator for Case<S, T>
 where
-    A: Combinator<In = I, Out = B::Out>,
-    B: Combinator<In = J>,
-    I: Value<R = J::R>,
-    J: Value,
+    S: Combinator<In = AC, Out = T::Out>,
+    T: Combinator<In = BC>,
+    AC: Value<B = BC::B>,
+    BC: Value,
 {
-    type In = value::Product<value::Sum<I::L, J::L>, I::R>;
-    type Out = A::Out;
+    type In = value::Product<value::Sum<AC::A, BC::A>, AC::B>;
+    type Out = S::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
         let (ab, c) = value.split_product().ok_or(())?;
         if let Some(a) = ab.split_left() {
-            let ac = I::join_product(a.clone(), c.clone()).ok_or(())?;
+            let ac = AC::join_product(a.clone(), c.clone()).ok_or(())?;
             let d = self.left.exec(ac)?;
             Ok(d)
         } else if let Some(b) = ab.split_right() {
-            let bc = J::join_product(b.clone(), c.clone()).ok_or(())?;
+            let bc = BC::join_product(b.clone(), c.clone()).ok_or(())?;
             let d = self.right.exec(bc)?;
             Ok(d)
         } else {

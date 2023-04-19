@@ -1,16 +1,16 @@
 use crate::display::DisplayDepth;
 
 pub trait Value: DisplayDepth + Clone {
-    type L: Value;
-    type R: Value;
+    type A: Value;
+    type B: Value;
 
-    fn split_left(&self) -> Option<&Self::L>;
+    fn split_left(&self) -> Option<&Self::A>;
 
-    fn split_right(&self) -> Option<&Self::R>;
+    fn split_right(&self) -> Option<&Self::B>;
 
-    fn split_product(&self) -> Option<(&Self::L, &Self::R)>;
+    fn split_product(&self) -> Option<(&Self::A, &Self::B)>;
 
-    fn join_product(a: Self::L, b: Self::R) -> Option<Self>;
+    fn join_product(a: Self::A, b: Self::B) -> Option<Self>;
 }
 
 /// Atomic unit type.
@@ -46,72 +46,72 @@ pub enum Product<A: Value, B: Value> {
 }
 
 impl Value for Unit {
-    type L = Unit;
-    type R = Unit;
+    type A = Unit;
+    type B = Unit;
 
-    fn split_left(&self) -> Option<&Self::L> {
+    fn split_left(&self) -> Option<&Self::A> {
         None
     }
 
-    fn split_right(&self) -> Option<&Self::R> {
+    fn split_right(&self) -> Option<&Self::B> {
         None
     }
 
-    fn split_product(&self) -> Option<(&Self::L, &Self::R)> {
+    fn split_product(&self) -> Option<(&Self::A, &Self::B)> {
         None
     }
 
-    fn join_product(_a: Self::L, _b: Self::R) -> Option<Self> {
+    fn join_product(_a: Self::A, _b: Self::B) -> Option<Self> {
         None
     }
 }
 
 impl<A: Value, B: Value> Value for Sum<A, B> {
-    type L = A;
-    type R = B;
+    type A = A;
+    type B = B;
 
-    fn split_left(&self) -> Option<&Self::L> {
+    fn split_left(&self) -> Option<&Self::A> {
         match self {
             Sum::Left(a) => Some(a),
             Sum::Right(_b) => None,
         }
     }
 
-    fn split_right(&self) -> Option<&Self::R> {
+    fn split_right(&self) -> Option<&Self::B> {
         match self {
             Sum::Left(_a) => None,
             Sum::Right(b) => Some(b),
         }
     }
 
-    fn split_product(&self) -> Option<(&Self::L, &Self::R)> {
+    fn split_product(&self) -> Option<(&Self::A, &Self::B)> {
         None
     }
 
-    fn join_product(_a: Self::L, _b: Self::R) -> Option<Self> {
+    fn join_product(_a: Self::A, _b: Self::B) -> Option<Self> {
         None
     }
 }
 
 impl<A: Value, B: Value> Value for Product<A, B> {
-    type L = A;
-    type R = B;
+    type A = A;
+    type B = B;
 
-    fn split_left(&self) -> Option<&Self::L> {
+    fn split_left(&self) -> Option<&Self::A> {
         None
     }
 
-    fn split_right(&self) -> Option<&Self::R> {
+    fn split_right(&self) -> Option<&Self::B> {
         None
     }
 
-    fn split_product(&self) -> Option<(&Self::L, &Self::R)> {
+    fn split_product(&self) -> Option<(&Self::A, &Self::B)> {
         match self {
             Product::Product(a, b) => Some((a, b)),
         }
     }
 
-    fn join_product(a: Self::L, b: Self::R) -> Option<Self> {
+    fn join_product(a: Self::A, b: Self::B) -> Option<Self> {
         Some(Product::Product(a, b))
     }
 }
