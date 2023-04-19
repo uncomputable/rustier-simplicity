@@ -57,13 +57,13 @@ where
 
 macro_rules! impl_display_leaf {
     ($structure:path, $name:expr) => {
-        impl DisplayDepth for $structure {
+        impl<I: Value> DisplayDepth for $structure {
             fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
                 fmt_depth_leaf($name, depth, f)
             }
         }
 
-        impl fmt::Display for $structure {
+        impl<I: Value> fmt::Display for $structure {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 self.fmt_depth(0, f)
             }
@@ -74,14 +74,14 @@ macro_rules! impl_display_leaf {
 // Doesn't work for value::Sum because of different structure
 // TODO: Change structure for value::Sum
 macro_rules! impl_display_single {
-    ($structure:path, $name:expr, $inner_trait:path) => {
-        impl<A: $inner_trait> DisplayDepth for $structure {
+    ($structure:path, $name:expr) => {
+        impl<A: combinator::Combinator, I: Value> DisplayDepth for $structure {
             fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
                 fmt_depth_single($name, depth, f, &self.inner)
             }
         }
 
-        impl<A: $inner_trait> fmt::Display for $structure {
+        impl<A: combinator::Combinator, I: Value> fmt::Display for $structure {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 self.fmt_depth(0, f)
             }
@@ -92,14 +92,14 @@ macro_rules! impl_display_single {
 // Doesn't work for value::Product because of `&self.left` and `&self.right`
 // TODO: Add macros that add getters?
 macro_rules! impl_display_double {
-    ($structure:path, $name:expr, $inner_trait:path) => {
-        impl<A: $inner_trait, B: $inner_trait> DisplayDepth for $structure {
+    ($structure:path, $name:expr) => {
+        impl<A: combinator::Combinator, B: combinator::Combinator> DisplayDepth for $structure {
             fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
                 fmt_depth_double($name, depth, f, &self.left, &self.right)
             }
         }
 
-        impl<A: $inner_trait, B: $inner_trait> fmt::Display for $structure {
+        impl<A: combinator::Combinator, B: combinator::Combinator> fmt::Display for $structure {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 self.fmt_depth(0, f)
             }
@@ -107,7 +107,17 @@ macro_rules! impl_display_double {
     };
 }
 
-impl_display_leaf!(Unit, "unit");
+impl DisplayDepth for Unit {
+    fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt_depth_leaf("unit", depth, f)
+    }
+}
+
+impl fmt::Display for Unit {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.fmt_depth(0, f)
+    }
+}
 
 impl<A: Value, B: Value> DisplayDepth for Sum<A, B> {
     fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
@@ -138,20 +148,20 @@ impl<A: Value, B: Value> fmt::Display for Product<A, B> {
     }
 }
 
-impl_display_leaf!(combinator::Unit, "unit");
+impl_display_leaf!(combinator::Unit<I>, "unit");
 
-impl_display_leaf!(combinator::Iden, "iden");
+impl_display_leaf!(combinator::Iden<I>, "iden");
 
-impl_display_single!(combinator::Take<A>, "take", combinator::Combinator);
+impl_display_single!(combinator::Take<A, I>, "take");
 
-impl_display_single!(combinator::Drop<A>, "drop", combinator::Combinator);
+impl_display_single!(combinator::Drop<A, I>, "drop");
 
-impl_display_single!(combinator::Injl<A>, "injl", combinator::Combinator);
+impl_display_single!(combinator::Injl<A, I>, "injl");
 
-impl_display_single!(combinator::Injr<A>, "injr", combinator::Combinator);
+impl_display_single!(combinator::Injr<A, I>, "injr");
 
-impl_display_double!(combinator::Pair<A, B>, "pair", combinator::Combinator);
+impl_display_double!(combinator::Pair<A, B>, "pair");
 
-impl_display_double!(combinator::Comp<A, B>, "comp", combinator::Combinator);
+impl_display_double!(combinator::Comp<A, B>, "comp");
 
-impl_display_double!(combinator::Case<A, B>, "case", combinator::Combinator);
+impl_display_double!(combinator::Case<A, B>, "case");

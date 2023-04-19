@@ -1,6 +1,17 @@
 use crate::display::DisplayDepth;
 
-pub trait Value: DisplayDepth {}
+pub trait Value: DisplayDepth + Clone {
+    type L: Value;
+    type R: Value;
+
+    fn split_left(&self) -> Option<&Self::L>;
+
+    fn split_right(&self) -> Option<&Self::R>;
+
+    fn split_product(&self) -> Option<(&Self::L, &Self::R)>;
+
+    fn join_product(a: Self::L, b: Self::R) -> Option<Self>;
+}
 
 /// Atomic unit type.
 ///
@@ -34,11 +45,76 @@ pub enum Product<A: Value, B: Value> {
     Product(A, B),
 }
 
-impl Value for Unit {}
+impl Value for Unit {
+    type L = Unit;
+    type R = Unit;
 
-impl<A: Value, B: Value> Value for Sum<A, B> {}
+    fn split_left(&self) -> Option<&Self::L> {
+        None
+    }
 
-impl<A: Value, B: Value> Value for Product<A, B> {}
+    fn split_right(&self) -> Option<&Self::R> {
+        None
+    }
+
+    fn split_product(&self) -> Option<(&Self::L, &Self::R)> {
+        None
+    }
+
+    fn join_product(_a: Self::L, _b: Self::R) -> Option<Self> {
+        None
+    }
+}
+
+impl<A: Value, B: Value> Value for Sum<A, B> {
+    type L = A;
+    type R = B;
+
+    fn split_left(&self) -> Option<&Self::L> {
+        match self {
+            Sum::Left(a) => Some(a),
+            Sum::Right(_b) => None,
+        }
+    }
+
+    fn split_right(&self) -> Option<&Self::R> {
+        match self {
+            Sum::Left(_a) => None,
+            Sum::Right(b) => Some(b),
+        }
+    }
+
+    fn split_product(&self) -> Option<(&Self::L, &Self::R)> {
+        None
+    }
+
+    fn join_product(_a: Self::L, _b: Self::R) -> Option<Self> {
+        None
+    }
+}
+
+impl<A: Value, B: Value> Value for Product<A, B> {
+    type L = A;
+    type R = B;
+
+    fn split_left(&self) -> Option<&Self::L> {
+        None
+    }
+
+    fn split_right(&self) -> Option<&Self::R> {
+        None
+    }
+
+    fn split_product(&self) -> Option<(&Self::L, &Self::R)> {
+        match self {
+            Product::Product(a, b) => Some((a, b)),
+        }
+    }
+
+    fn join_product(a: Self::L, b: Self::R) -> Option<Self> {
+        Some(Product::Product(a, b))
+    }
+}
 
 /// Bits are sums of unit
 pub type Bit = Sum<Unit, Unit>;
