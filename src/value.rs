@@ -1,16 +1,17 @@
 use crate::display::DisplayDepth;
+use crate::error::Error;
 
 pub trait Value: DisplayDepth + Clone {
     type A: Value;
     type B: Value;
 
-    fn split_left(&self) -> Option<&Self::A>;
+    fn split_left(&self) -> Result<&Self::A, Error>;
 
-    fn split_right(&self) -> Option<&Self::B>;
+    fn split_right(&self) -> Result<&Self::B, Error>;
 
-    fn split_product(&self) -> Option<(&Self::A, &Self::B)>;
+    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error>;
 
-    fn join_product(a: Self::A, b: Self::B) -> Option<Self>;
+    fn join_product(a: Self::A, b: Self::B) -> Result<Self, Error>;
 }
 
 /// Atomic unit type.
@@ -49,20 +50,20 @@ impl Value for Unit {
     type A = Unit;
     type B = Unit;
 
-    fn split_left(&self) -> Option<&Self::A> {
-        None
+    fn split_left(&self) -> Result<&Self::A, Error> {
+        Err(Error::SplitLeft)
     }
 
-    fn split_right(&self) -> Option<&Self::B> {
-        None
+    fn split_right(&self) -> Result<&Self::B, Error> {
+        Err(Error::SplitRight)
     }
 
-    fn split_product(&self) -> Option<(&Self::A, &Self::B)> {
-        None
+    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error> {
+        Err(Error::SplitProduct)
     }
 
-    fn join_product(_a: Self::A, _b: Self::B) -> Option<Self> {
-        None
+    fn join_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
+        Err(Error::JoinProduct)
     }
 }
 
@@ -70,26 +71,26 @@ impl<A: Value, B: Value> Value for Sum<A, B> {
     type A = A;
     type B = B;
 
-    fn split_left(&self) -> Option<&Self::A> {
+    fn split_left(&self) -> Result<&Self::A, Error> {
         match self {
-            Sum::Left(a) => Some(a),
-            Sum::Right(_b) => None,
+            Sum::Left(a) => Ok(a),
+            Sum::Right(_b) => Err(Error::SplitLeft),
         }
     }
 
-    fn split_right(&self) -> Option<&Self::B> {
+    fn split_right(&self) -> Result<&Self::B, Error> {
         match self {
-            Sum::Left(_a) => None,
-            Sum::Right(b) => Some(b),
+            Sum::Left(_a) => Err(Error::SplitRight),
+            Sum::Right(b) => Ok(b),
         }
     }
 
-    fn split_product(&self) -> Option<(&Self::A, &Self::B)> {
-        None
+    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error> {
+        Err(Error::SplitProduct)
     }
 
-    fn join_product(_a: Self::A, _b: Self::B) -> Option<Self> {
-        None
+    fn join_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
+        Err(Error::JoinProduct)
     }
 }
 
@@ -97,22 +98,22 @@ impl<A: Value, B: Value> Value for Product<A, B> {
     type A = A;
     type B = B;
 
-    fn split_left(&self) -> Option<&Self::A> {
-        None
+    fn split_left(&self) -> Result<&Self::A, Error> {
+        Err(Error::SplitLeft)
     }
 
-    fn split_right(&self) -> Option<&Self::B> {
-        None
+    fn split_right(&self) -> Result<&Self::B, Error> {
+        Err(Error::SplitRight)
     }
 
-    fn split_product(&self) -> Option<(&Self::A, &Self::B)> {
+    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error> {
         match self {
-            Product::Product(a, b) => Some((a, b)),
+            Product::Product(a, b) => Ok((a, b)),
         }
     }
 
-    fn join_product(a: Self::A, b: Self::B) -> Option<Self> {
-        Some(Product::Product(a, b))
+    fn join_product(a: Self::A, b: Self::B) -> Result<Self, Error> {
+        Ok(Product::Product(a, b))
     }
 }
 

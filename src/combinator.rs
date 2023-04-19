@@ -1,4 +1,5 @@
 use crate::display::DisplayDepth;
+use crate::error::Error;
 use crate::value;
 use crate::value::Value;
 use std::marker::PhantomData;
@@ -7,7 +8,7 @@ pub trait Combinator: DisplayDepth {
     type In: Value;
     type Out: Value;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()>;
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error>;
 }
 
 /// Atomic unit combinator.
@@ -135,7 +136,7 @@ where
     type In = A;
     type Out = value::Unit;
 
-    fn exec(&self, _value: Self::In) -> Result<Self::Out, ()> {
+    fn exec(&self, _value: Self::In) -> Result<Self::Out, Error> {
         Ok(value::Unit::Unit)
     }
 }
@@ -147,7 +148,7 @@ where
     type In = A;
     type Out = A;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         Ok(value)
     }
 }
@@ -160,8 +161,8 @@ where
     type In = value::Product<T::In, B>;
     type Out = T::Out;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
-        let (a, _) = value.split_product().ok_or(())?;
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        let (a, _) = value.split_product()?;
         let c = self.inner.exec(a.clone())?;
         Ok(c)
     }
@@ -175,8 +176,8 @@ where
     type In = value::Product<A, T::In>;
     type Out = T::Out;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
-        let (_, b) = value.split_product().ok_or(())?;
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        let (_, b) = value.split_product()?;
         let c = self.inner.exec(b.clone())?;
         Ok(c)
     }
@@ -190,7 +191,7 @@ where
     type In = T::In;
     type Out = value::Sum<T::Out, C>;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         let c = self.inner.exec(value)?;
         Ok(value::Sum::Left(c))
     }
@@ -204,7 +205,7 @@ where
     type In = T::In;
     type Out = value::Sum<B, T::Out>;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         let c = self.inner.exec(value)?;
         Ok(value::Sum::Right(c))
     }
@@ -218,7 +219,7 @@ where
     type In = S::In;
     type Out = value::Product<S::Out, T::Out>;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         let b = self.left.exec(value.clone())?;
         let c = self.right.exec(value)?;
         Ok(value::Product::Product(b, c))
@@ -233,7 +234,7 @@ where
     type In = S::In;
     type Out = T::Out;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         let b = self.left.exec(value)?;
         let c = self.right.exec(b)?;
         Ok(c)
@@ -250,18 +251,18 @@ where
     type In = value::Product<value::Sum<AC::A, BC::A>, AC::B>;
     type Out = S::Out;
 
-    fn exec(&self, value: Self::In) -> Result<Self::Out, ()> {
-        let (ab, c) = value.split_product().ok_or(())?;
-        if let Some(a) = ab.split_left() {
-            let ac = AC::join_product(a.clone(), c.clone()).ok_or(())?;
+    fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        let (ab, c) = value.split_product()?;
+        if let Ok(a) = ab.split_left() {
+            let ac = AC::join_product(a.clone(), c.clone())?;
             let d = self.left.exec(ac)?;
             Ok(d)
-        } else if let Some(b) = ab.split_right() {
-            let bc = BC::join_product(b.clone(), c.clone()).ok_or(())?;
+        } else if let Ok(b) = ab.split_right() {
+            let bc = BC::join_product(b.clone(), c.clone())?;
             let d = self.right.exec(bc)?;
             Ok(d)
         } else {
-            Err(())
+            Err(Error::CaseSum)
         }
     }
 }
