@@ -111,7 +111,7 @@ macro_rules! impl_display_double {
 
 impl DisplayDepth for value::Unit {
     fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt_depth_leaf("unit", depth, f)
+        fmt_depth_leaf("●", depth, f)
     }
 }
 
