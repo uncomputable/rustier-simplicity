@@ -267,14 +267,17 @@ where
     }
 }
 
+/// unit : A → 1
 pub fn unit<A: Value>() -> Unit<A> {
     Unit { _i: PhantomData }
 }
 
+/// iden : A → A
 pub fn iden<A: Value>() -> Iden<A> {
     Iden { _i: PhantomData }
 }
 
+/// take t : A × B → C where t : A → C
 pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
     Take {
         inner: t,
@@ -282,6 +285,7 @@ pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
     }
 }
 
+/// drop t : A × B → C where t : B → C
 pub fn _drop<T: Combinator, A: Value>(t: T) -> Drop<T, A> {
     Drop {
         inner: t,
@@ -289,6 +293,7 @@ pub fn _drop<T: Combinator, A: Value>(t: T) -> Drop<T, A> {
     }
 }
 
+/// injl t : A → B + C where t : A → B
 pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
     Injl {
         inner: t,
@@ -296,6 +301,7 @@ pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
     }
 }
 
+/// injr t : A → B + C where t : A → C
 pub fn injr<T: Combinator, B: Value>(t: T) -> Injr<T, B> {
     Injr {
         inner: t,
@@ -303,14 +309,17 @@ pub fn injr<T: Combinator, B: Value>(t: T) -> Injr<T, B> {
     }
 }
 
+/// pair s t : A → B × C where s : A → B and t : A → C
 pub fn pair<S: Combinator, T: Combinator>(s: S, t: T) -> Pair<S, T> {
     Pair { left: s, right: t }
 }
 
+/// comp s t : A → C where s : A → B and t : B → C
 pub fn comp<S: Combinator, T: Combinator>(s: S, t: T) -> Comp<S, T> {
     Comp { left: s, right: t }
 }
 
+/// case s t : (A + B) × C → D where s : A × C → D and t : B × C → D
 pub fn case<S: Combinator, T: Combinator>(s: S, t: T) -> Case<S, T> {
     Case { left: s, right: t }
 }
