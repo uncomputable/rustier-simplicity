@@ -314,3 +314,64 @@ pub fn comp<S: Combinator, T: Combinator>(s: S, t: T) -> Comp<S, T> {
 pub fn case<S: Combinator, T: Combinator>(s: S, t: T) -> Case<S, T> {
     Case { left: s, right: t }
 }
+
+#[allow(type_alias_bounds)]
+pub type False<A: Value> = Injl<Unit<A>, value::Unit>;
+#[allow(type_alias_bounds)]
+pub type True<A: Value> = Injr<Unit<A>, value::Unit>;
+
+/// false : A → 2
+pub fn bit_false<A: Value>() -> False<A> {
+    injl(unit())
+}
+
+/// true : A → 2
+pub fn bit_true<A: Value>() -> True<A> {
+    injr(unit())
+}
+
+#[allow(type_alias_bounds)]
+pub type Cond<S: Combinator, T: Combinator> = Case<Drop<T, value::Unit>, Drop<S, value::Unit>>;
+#[allow(type_alias_bounds)]
+pub type Not<T: Combinator> =
+    Comp<Pair<T, Unit<T::In>>, Cond<False<value::Unit>, True<value::Unit>>>;
+
+/// cond : 2 × A → B where s : A → B and t : A → B
+pub fn cond<S: Combinator, T: Combinator>(s: S, t: T) -> Cond<S, T> {
+    case(_drop(t), _drop(s))
+}
+
+/// not : A → 2 where t : A → 2
+pub fn not<T: Combinator>(t: T) -> Not<T> {
+    comp(pair(t, unit()), cond(bit_false(), bit_true()))
+}
+
+pub type Maj1 =
+    Cond<Cond<True<value::Bit>, Iden<value::Bit>>, Cond<Iden<value::Bit>, False<value::Bit>>>;
+pub type Xor3 = Cond<
+    Cond<Iden<value::Bit>, Not<Iden<value::Bit>>>,
+    Cond<Not<Iden<value::Bit>>, Iden<value::Bit>>,
+>;
+pub type FullAdd1 = Pair<Maj1, Xor3>;
+pub type HalfAdd1 =
+    Cond<Pair<Iden<value::Bit>, Not<Iden<value::Bit>>>, Pair<False<value::Bit>, Iden<value::Bit>>>;
+
+/// maj : 2 × (2 × 2) → 2
+pub fn maj() -> Maj1 {
+    cond(cond(bit_true(), iden()), cond(iden(), bit_false()))
+}
+
+/// xor3 : 2 × (2 × 2) → 2
+pub fn xor3() -> Xor3 {
+    cond(cond(iden(), not(iden())), cond(not(iden()), iden()))
+}
+
+/// full_add1 : 2 × (2 × 2) → 2 × 2
+pub fn full_add1() -> FullAdd1 {
+    pair(maj(), xor3())
+}
+
+/// half_add1 : 2 × 2 → 2 × 2
+pub fn half_add1() -> HalfAdd1 {
+    cond(pair(iden(), not(iden())), pair(bit_false(), iden()))
+}
