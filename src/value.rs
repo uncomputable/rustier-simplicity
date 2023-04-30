@@ -157,34 +157,69 @@ pub fn byte_to_value(n: u8) -> Byte {
     )
 }
 
-pub type Word8 = Byte;
+pub type Word1 = Bit;
+pub type Word2 = Product<Word1, Word1>;
+pub type Word4 = Product<Word2, Word2>;
+pub type Word8 = Product<Word4, Word4>;
 pub type Word16 = Product<Word8, Word8>;
 pub type Word32 = Product<Word16, Word16>;
 pub type Word64 = Product<Word32, Word32>;
 pub type Word128 = Product<Word64, Word64>;
 pub type Word258 = Product<Word128, Word128>;
 
-pub fn u16_to_value(n: u16) -> Word16 {
-    let left = (n >> 8) as u8;
-    let right = (n & 0xff) as u8;
-    Product::Product(byte_to_value(left), byte_to_value(right))
+pub fn from_u1(n: u8) -> Word1 {
+    match n {
+        0 => Sum::Left(Unit::Unit),
+        1 => Sum::Right(Unit::Unit),
+        _ => panic!("{} out of range for u1", n),
+    }
 }
 
-pub fn u32_to_value(n: u32) -> Word32 {
-    let left = (n >> 16) as u16;
-    let right = (n & 0xffff) as u16;
-    Product::Product(u16_to_value(left), u16_to_value(right))
+pub fn from_u2(n: u8) -> Word2 {
+    if n > 3 {
+        panic!("{} out of range for u2", n)
+    }
+    let n1 = (n & 2) / 2;
+    let n2 = n & 1;
+    Product::Product(from_u1(n1), from_u1(n2))
 }
 
-pub fn u64_to_value(n: u64) -> Word64 {
-    let left = (n >> 32) as u32;
-    let right = (n & 0xffff_ffff) as u32;
-    Product::Product(u32_to_value(left), u32_to_value(right))
+pub fn from_u4(n: u8) -> Word4 {
+    if n > 15 {
+        panic!("{} out of range for u4", n)
+    }
+    let n1 = (n & 12) / 4;
+    let n2 = n & 3;
+    Product::Product(from_u2(n1), from_u2(n2))
 }
 
-pub fn u128_to_value(n: u128) -> Word128 {
-    let left = (n >> 64) as u64;
+pub fn from_u8(n: u8) -> Word8 {
+    let n1 = n >> 4;
+    let n2 = n & 0xf;
+    Product::Product(from_u4(n1), from_u4(n2))
+}
+
+pub fn from_u16(n: u16) -> Word16 {
+    let n1 = (n >> 8) as u8;
+    let n2 = (n & 0xff) as u8;
+    Product::Product(byte_to_value(n1), byte_to_value(n2))
+}
+
+pub fn from_u32(n: u32) -> Word32 {
+    let n1 = (n >> 16) as u16;
+    let n2 = (n & 0xffff) as u16;
+    Product::Product(from_u16(n1), from_u16(n2))
+}
+
+pub fn from_u64(n: u64) -> Word64 {
+    let n1 = (n >> 32) as u32;
+    let n2 = (n & 0xffff_ffff) as u32;
+    Product::Product(from_u32(n1), from_u32(n2))
+}
+
+pub fn from_u128(n: u128) -> Word128 {
+    let n1 = (n >> 64) as u64;
     // Cast picks last bytes
-    let right = n as u64;
-    Product::Product(u64_to_value(left), u64_to_value(right))
+    let n2 = n as u64;
+    Product::Product(from_u64(n1), from_u64(n2))
 }

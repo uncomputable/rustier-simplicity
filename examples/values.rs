@@ -41,6 +41,6 @@ fn main() {
     println!("Byte value:\n{}\n", byte);
 
     // Word values
-    let word = value::u64_to_value(1337);
+    let word = value::from_u64(1337);
     println!("Word value:\n{}", word);
 }
