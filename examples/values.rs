@@ -43,4 +43,10 @@ fn main() {
     // Word values
     let word = value::from_u64(1337);
     println!("Word value:\n{}", word);
+
+    for n in 0..10000 {
+        let value = value::from_u64(n);
+        let m = value::to_u64(value);
+        assert_eq!(n, m);
+    }
 }

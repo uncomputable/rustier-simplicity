@@ -202,7 +202,7 @@ pub fn from_u8(n: u8) -> Word8 {
 pub fn from_u16(n: u16) -> Word16 {
     let n1 = (n >> 8) as u8;
     let n2 = (n & 0xff) as u8;
-    Product::Product(byte_to_value(n1), byte_to_value(n2))
+    Product::Product(from_u8(n1), from_u8(n2))
 }
 
 pub fn from_u32(n: u32) -> Word32 {
@@ -222,4 +222,81 @@ pub fn from_u128(n: u128) -> Word128 {
     // Cast picks last bytes
     let n2 = n as u64;
     Product::Product(from_u64(n1), from_u64(n2))
+}
+
+pub fn to_u1(n: Word1) -> u8 {
+    match n {
+        Word1::Left(_) => 0,
+        Word1::Right(_) => 1,
+    }
+}
+
+pub fn to_u2(n: Word2) -> u8 {
+    match n {
+        Word2::Product(n1, n2) => {
+            let m1 = to_u1(n1);
+            let m2 = to_u1(n2);
+            (m1 << 1) + m2
+        }
+    }
+}
+
+pub fn to_u4(n: Word4) -> u8 {
+    match n {
+        Word4::Product(n1, n2) => {
+            let m1 = to_u2(n1);
+            let m2 = to_u2(n2);
+            (m1 << 2) + m2
+        }
+    }
+}
+
+pub fn to_u8(n: Word8) -> u8 {
+    match n {
+        Word8::Product(n1, n2) => {
+            let m1 = to_u4(n1);
+            let m2 = to_u4(n2);
+            (m1 << 4) + m2
+        }
+    }
+}
+
+pub fn to_u16(n: Word16) -> u16 {
+    match n {
+        Word16::Product(n1, n2) => {
+            let m1 = to_u8(n1) as u16;
+            let m2 = to_u8(n2) as u16;
+            (m1 << 8) + m2
+        }
+    }
+}
+
+pub fn to_u32(n: Word32) -> u32 {
+    match n {
+        Word32::Product(n1, n2) => {
+            let m1 = to_u16(n1) as u32;
+            let m2 = to_u16(n2) as u32;
+            (m1 << 16) + m2
+        }
+    }
+}
+
+pub fn to_u64(n: Word64) -> u64 {
+    match n {
+        Word64::Product(n1, n2) => {
+            let m1 = to_u32(n1) as u64;
+            let m2 = to_u32(n2) as u64;
+            (m1 << 32) + m2
+        }
+    }
+}
+
+pub fn to_u128(n: Word128) -> u128 {
+    match n {
+        Word128::Product(n1, n2) => {
+            let m1 = to_u64(n1) as u128;
+            let m2 = to_u64(n2) as u128;
+            (m1 << 64) + m2
+        }
+    }
 }
