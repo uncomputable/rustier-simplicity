@@ -1,5 +1,6 @@
 use simplicity_playground::combinator::{
-    _drop, case, comp, full_add2, half_add1, iden, injl, injr, not, pair, unit, Combinator,
+    _drop, case, comp, full_add_2, full_add_64, half_add_1, iden, injl, injr, not, pair, unit,
+    Combinator,
 };
 use simplicity_playground::value;
 
@@ -39,7 +40,7 @@ fn main() {
 
     // 1-Bit Half Adder
 
-    let half_adder = half_add1();
+    let half_adder = half_add_1();
     println!("Half adder:\n{}\n", half_adder);
 
     for bit0 in [false, true] {
@@ -56,7 +57,7 @@ fn main() {
 
     // 2-Bit Full Adder
 
-    let full_adder = full_add2();
+    let full_adder = full_add_2();
     println!("Full adder:\n{}\n", full_adder);
 
     for carry_in in 0..2 {
@@ -79,6 +80,36 @@ fn main() {
                 let sum = value::to_u2(sum_value);
 
                 assert_eq!(a + b + carry_in, sum + carry_out * 4);
+            }
+        }
+    }
+
+    // 64-Bit Full Adder
+
+    let big_adder = full_add_64();
+    // 10000 lines output
+    // println!("Big adder:\n{}\n", big_adder);
+
+    for carry_in in 0..1 {
+        let carry_in_value = value::from_u1(carry_in);
+
+        for a in 0..100 {
+            let a_value = value::from_u64(a);
+
+            for b in 0..100 {
+                let b_value = value::from_u64(b);
+                let input_value = value::Product::Product(
+                    carry_in_value,
+                    value::Product::Product(a_value, b_value),
+                );
+                let output_value = big_adder.exec(input_value).expect("Execute big adder");
+                let (carry_out_value, sum_value) = match output_value {
+                    value::Product::Product(x, y) => (x, y),
+                };
+                let carry_out = value::to_u1(carry_out_value);
+                let sum = value::to_u64(sum_value);
+
+                assert_eq!(a + b + carry_in as u64, sum + (carry_out as u64 * 128));
             }
         }
     }
