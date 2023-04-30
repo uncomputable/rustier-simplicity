@@ -384,3 +384,103 @@ pub fn full_add1() -> FullAdd1 {
 pub fn half_add1() -> HalfAdd1 {
     cond(pair(iden(), not(iden())), pair(bit_false(), iden()))
 }
+
+#[allow(type_alias_bounds)]
+pub type H<A: Value> = Iden<A>;
+#[allow(type_alias_bounds)]
+pub type O<T: Combinator, B: Value> = Take<T, B>;
+#[allow(type_alias_bounds)]
+pub type I<T: Combinator, A: Value> = Drop<T, A>;
+
+/// `h : A → A`
+///
+/// Same as `iden`
+pub fn h<A: Value>() -> H<A> {
+    iden()
+}
+
+/// `o t : A × B → C where t : A → C`
+///
+/// Same as `take t`
+pub fn o<T: Combinator, B: Value>(t: T) -> O<T, B> {
+    take(t)
+}
+
+/// `i t : A × B → C where t : B → C`
+///
+/// Same as `drop t`
+pub fn i<T: Combinator, A: Value>(t: T) -> I<T, A> {
+    _drop(t)
+}
+
+type FullAddPart1a = Drop<
+    Pair<
+        O<O<H<value::Word1>, value::Word1>, value::Word2>,
+        I<O<H<value::Word1>, value::Word1>, value::Word2>,
+    >,
+    value::Bit,
+>;
+
+/// `full_add_part1a : 2 × (2^2 × 2^2) → 2^1 × 2^1`
+fn full_add_part1a() -> FullAddPart1a {
+    _drop(pair(o(o(h())), i(o(h()))))
+}
+
+type FullAddPart1b = Pair<
+    O<H<value::Bit>, value::Word4>,
+    Drop<
+        Pair<
+            O<I<H<value::Word1>, value::Word1>, value::Word2>,
+            I<I<H<value::Word1>, value::Word1>, value::Word2>,
+        >,
+        value::Bit,
+    >,
+>;
+
+/// `full_add_part1b : 2 × (2^2 × 2^2) → 2 × 2^1`
+fn full_add_part1b() -> FullAddPart1b {
+    pair(o(h()), _drop(pair(o(i(h())), i(i(h())))))
+}
+
+type FullAddPart1 = Pair<FullAddPart1a, Comp<FullAddPart1b, FullAdd1>>;
+
+/// `full_add_part1 : 2 × (2^2 × 2^2) → (2^1 × 2^1) × (2 × 2^1)`
+fn full_add_part1() -> FullAddPart1 {
+    pair(full_add_part1a(), comp(full_add_part1b(), full_add1()))
+}
+
+type FullAddPart2 = Pair<
+    I<I<H<value::Word1>, value::Bit>, value::Word2>,
+    Comp<
+        Pair<
+            I<O<H<value::Bit>, value::Word1>, value::Word2>,
+            O<H<value::Word2>, value::Product<value::Bit, value::Word1>>,
+        >,
+        FullAdd1,
+    >,
+>;
+
+/// `full_add_part2 : (2^1 × 2^1) × (2 × 2^1) → 2^1 × (2 × 2^1)`
+fn full_add_part2() -> FullAddPart2 {
+    pair(i(i(h())), comp(pair(i(o(h())), o(h())), full_add1()))
+}
+
+type FullAddPart3 = Pair<
+    I<O<H<value::Bit>, value::Word1>, value::Word1>,
+    Pair<
+        I<I<H<value::Word1>, value::Bit>, value::Word1>,
+        O<H<value::Word1>, value::Product<value::Bit, value::Word1>>,
+    >,
+>;
+
+/// `full_add_part2 : 2^1 × (2 × 2^1) → 2 × (2^1 × 2^1)`
+fn full_add_part3() -> FullAddPart3 {
+    pair(i(o(h())), pair(i(i(h())), o(h())))
+}
+
+type FullAdd2 = Comp<FullAddPart1, Comp<FullAddPart2, FullAddPart3>>;
+
+/// `full_add2 : 2 × (2^2 × 2^2) → 2 × 2^2`
+pub fn full_add2() -> FullAdd2 {
+    comp(full_add_part1(), comp(full_add_part2(), full_add_part3()))
+}
