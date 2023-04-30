@@ -4,7 +4,7 @@ use simplicity_playground::combinator::{
 use simplicity_playground::{combinator, value};
 
 fn main() {
-    // Unit constant
+    // Unit Constant
 
     let unit_program = unit::<value::Bit>();
     println!("Unit program:\n{}\n", unit_program);
@@ -15,7 +15,7 @@ fn main() {
         println!("unit({}):\n{}\n", bit, output_value);
     }
 
-    // Boolean identity
+    // Boolean Identity
 
     let iden_program = iden::<value::Bit>();
     println!("Iden program:\n{}\n", iden_program);
@@ -26,7 +26,7 @@ fn main() {
         println!("iden({}):\n{}\n", bit, output_value);
     }
 
-    // Boolean negation
+    // Boolean Negation
 
     let not_program = not(iden::<value::Bit>());
     println!("Not program:\n{}\n", not_program);
@@ -37,7 +37,7 @@ fn main() {
         println!("not({}):\n{}\n", bit, output_value);
     }
 
-    // 1-Bit Half adder
+    // 1-Bit Half Adder
 
     let half_adder = half_add1();
     println!("Half adder:\n{}\n", half_adder);

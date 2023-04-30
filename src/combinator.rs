@@ -267,17 +267,17 @@ where
     }
 }
 
-/// unit : A → 1
+/// `unit : A → 1`
 pub fn unit<A: Value>() -> Unit<A> {
     Unit { _i: PhantomData }
 }
 
-/// iden : A → A
+/// `iden : A → A`
 pub fn iden<A: Value>() -> Iden<A> {
     Iden { _i: PhantomData }
 }
 
-/// take t : A × B → C where t : A → C
+/// `take t : A × B → C where t : A → C`
 pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
     Take {
         inner: t,
@@ -285,7 +285,7 @@ pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
     }
 }
 
-/// drop t : A × B → C where t : B → C
+/// `drop t : A × B → C where t : B → C`
 pub fn _drop<T: Combinator, A: Value>(t: T) -> Drop<T, A> {
     Drop {
         inner: t,
@@ -293,7 +293,7 @@ pub fn _drop<T: Combinator, A: Value>(t: T) -> Drop<T, A> {
     }
 }
 
-/// injl t : A → B + C where t : A → B
+/// `injl t : A → B + C where t : A → B`
 pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
     Injl {
         inner: t,
@@ -301,7 +301,7 @@ pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
     }
 }
 
-/// injr t : A → B + C where t : A → C
+/// `injr t : A → B + C where t : A → C`
 pub fn injr<T: Combinator, B: Value>(t: T) -> Injr<T, B> {
     Injr {
         inner: t,
@@ -309,17 +309,17 @@ pub fn injr<T: Combinator, B: Value>(t: T) -> Injr<T, B> {
     }
 }
 
-/// pair s t : A → B × C where s : A → B and t : A → C
+/// `pair s t : A → B × C where s : A → B and t : A → C`
 pub fn pair<S: Combinator, T: Combinator>(s: S, t: T) -> Pair<S, T> {
     Pair { left: s, right: t }
 }
 
-/// comp s t : A → C where s : A → B and t : B → C
+/// `comp s t : A → C where s : A → B and t : B → C`
 pub fn comp<S: Combinator, T: Combinator>(s: S, t: T) -> Comp<S, T> {
     Comp { left: s, right: t }
 }
 
-/// case s t : (A + B) × C → D where s : A × C → D and t : B × C → D
+/// `case s t : (A + B) × C → D where s : A × C → D and t : B × C → D`
 pub fn case<S: Combinator, T: Combinator>(s: S, t: T) -> Case<S, T> {
     Case { left: s, right: t }
 }
@@ -329,12 +329,12 @@ pub type False<A: Value> = Injl<Unit<A>, value::Unit>;
 #[allow(type_alias_bounds)]
 pub type True<A: Value> = Injr<Unit<A>, value::Unit>;
 
-/// false : A → 2
+/// `false : A → 2`
 pub fn bit_false<A: Value>() -> False<A> {
     injl(unit())
 }
 
-/// true : A → 2
+/// `true : A → 2`
 pub fn bit_true<A: Value>() -> True<A> {
     injr(unit())
 }
@@ -345,12 +345,12 @@ pub type Cond<S: Combinator, T: Combinator> = Case<Drop<T, value::Unit>, Drop<S,
 pub type Not<T: Combinator> =
     Comp<Pair<T, Unit<T::In>>, Cond<False<value::Unit>, True<value::Unit>>>;
 
-/// cond : 2 × A → B where s : A → B and t : A → B
+/// `cond : 2 × A → B where s : A → B and t : A → B`
 pub fn cond<S: Combinator, T: Combinator>(s: S, t: T) -> Cond<S, T> {
     case(_drop(t), _drop(s))
 }
 
-/// not : A → 2 where t : A → 2
+/// `not : A → 2 where t : A → 2`
 pub fn not<T: Combinator>(t: T) -> Not<T> {
     comp(pair(t, unit()), cond(bit_false(), bit_true()))
 }
@@ -365,22 +365,22 @@ pub type FullAdd1 = Pair<Maj1, Xor3>;
 pub type HalfAdd1 =
     Cond<Pair<Iden<value::Bit>, Not<Iden<value::Bit>>>, Pair<False<value::Bit>, Iden<value::Bit>>>;
 
-/// maj : 2 × (2 × 2) → 2
+/// `maj : 2 × (2 × 2) → 2`
 pub fn maj() -> Maj1 {
     cond(cond(bit_true(), iden()), cond(iden(), bit_false()))
 }
 
-/// xor3 : 2 × (2 × 2) → 2
+/// `xor3 : 2 × (2 × 2) → 2`
 pub fn xor3() -> Xor3 {
     cond(cond(iden(), not(iden())), cond(not(iden()), iden()))
 }
 
-/// full_add1 : 2 × (2 × 2) → 2 × 2
+/// `full_add1 : 2 × (2 × 2) → 2 × 2`
 pub fn full_add1() -> FullAdd1 {
     pair(maj(), xor3())
 }
 
-/// half_add1 : 2 × 2 → 2 × 2
+/// `half_add1 : 2 × 2 → 2 × 2`
 pub fn half_add1() -> HalfAdd1 {
     cond(pair(iden(), not(iden())), pair(bit_false(), iden()))
 }
