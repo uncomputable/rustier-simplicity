@@ -1,7 +1,7 @@
 use simplicity_playground::combinator::{
-    _drop, case, comp, half_add1, iden, injl, injr, not, pair, unit, Combinator,
+    _drop, case, comp, full_add2, half_add1, iden, injl, injr, not, pair, unit, Combinator,
 };
-use simplicity_playground::{combinator, value};
+use simplicity_playground::value;
 
 fn main() {
     // Unit Constant
@@ -51,6 +51,35 @@ fn main() {
             let output_value = half_adder.exec(input_value).expect("exec half_adder");
             // First bit is carry, second bit is sum
             println!("{} + {} = {}\n", bit0, bit1, output_value);
+        }
+    }
+
+    // 2-Bit Full Adder
+
+    let full_adder = full_add2();
+    println!("Full adder:\n{}\n", full_adder);
+
+    for carry_in in 0..2 {
+        let carry_in_value = value::from_u1(carry_in);
+
+        for a in 0..4 {
+            let a_value = value::from_u2(a);
+
+            for b in 0..4 {
+                let b_value = value::from_u2(b);
+                let input_value = value::Product::Product(
+                    carry_in_value,
+                    value::Product::Product(a_value, b_value),
+                );
+                let output_value = full_adder.exec(input_value).expect("Execute full adder");
+                let (carry_out_value, sum_value) = match output_value {
+                    value::Product::Product(x, y) => (x, y),
+                };
+                let carry_out = value::to_u1(carry_out_value);
+                let sum = value::to_u2(sum_value);
+
+                assert_eq!(a + b + carry_in, sum + carry_out * 4);
+            }
         }
     }
 }
