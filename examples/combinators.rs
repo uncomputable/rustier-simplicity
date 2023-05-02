@@ -79,7 +79,7 @@ fn main() {
                 let carry_out = value::to_u1(carry_out_value);
                 let sum = value::to_u2(sum_value);
 
-                assert_eq!(a + b + carry_in, sum + carry_out * 4);
+                assert_eq!(a + b + carry_in, sum + (carry_out << 2));
             }
         }
     }
@@ -109,7 +109,10 @@ fn main() {
                 let carry_out = value::to_u1(carry_out_value);
                 let sum = value::to_u64(sum_value);
 
-                assert_eq!(a + b + carry_in as u64, sum + (carry_out as u64 * 128));
+                assert_eq!(
+                    a as u128 + b as u128 + carry_in as u128,
+                    sum as u128 + ((carry_out as u128) << 64)
+                );
             }
         }
     }
