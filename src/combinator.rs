@@ -36,7 +36,7 @@ pub struct Iden<A: Value> {
 /// and returns a value `c` of type `C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Take<T: Combinator, B: Value> {
-    pub inner: T,
+    pub(crate) inner: T,
     _i: PhantomData<B>,
 }
 
@@ -49,7 +49,7 @@ pub struct Take<T: Combinator, B: Value> {
 /// and returns a value `c` of type `C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Drop<T: Combinator, A: Value> {
-    pub inner: T,
+    pub(crate) inner: T,
     _i: PhantomData<A>,
 }
 
@@ -62,7 +62,7 @@ pub struct Drop<T: Combinator, A: Value> {
 /// and returns the value `L(b)` of type `B + C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Injl<T: Combinator, C: Value> {
-    pub inner: T,
+    pub(crate) inner: T,
     _i: PhantomData<C>,
 }
 
@@ -75,7 +75,7 @@ pub struct Injl<T: Combinator, C: Value> {
 /// and returns the value `R(c)` of type `B + C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Injr<T: Combinator, B: Value> {
-    pub inner: T,
+    pub(crate) inner: T,
     _i: PhantomData<B>,
 }
 
@@ -90,8 +90,8 @@ pub struct Injr<T: Combinator, B: Value> {
 /// and returns the value `(b, c)` of type `B × C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Pair<S: Combinator, T: Combinator> {
-    pub left: S,
-    pub right: T,
+    pub(crate) left: S,
+    pub(crate) right: T,
 }
 
 /// Comp combinator (composition).
@@ -105,8 +105,8 @@ pub struct Pair<S: Combinator, T: Combinator> {
 /// and returns `c`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Comp<S: Combinator, T: Combinator> {
-    pub left: S,
-    pub right: T,
+    pub(crate) left: S,
+    pub(crate) right: T,
 }
 
 /// Case combinator (conditional).
@@ -125,8 +125,8 @@ pub struct Comp<S: Combinator, T: Combinator> {
 /// and returns `d`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Case<S: Combinator, T: Combinator> {
-    pub left: S,
-    pub right: T,
+    pub(crate) left: S,
+    pub(crate) right: T,
 }
 
 impl<A> Combinator for Unit<A>
