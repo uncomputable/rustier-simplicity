@@ -4,10 +4,15 @@ use crate::value;
 use crate::value::Value;
 use std::marker::PhantomData;
 
+/// Generic combinator.
 pub trait Combinator: DisplayDepth {
+    /// Input type
     type In: Value;
+    /// Output type
     type Out: Value;
 
+    /// Execute the combinator on the given input value.
+    /// Return an output value or an error.
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error>;
 }
 
@@ -131,137 +136,224 @@ pub struct Case<S: Combinator, T: Combinator> {
 
 impl<A> Combinator for Unit<A>
 where
+    // Any input type
     A: Value,
 {
+    // Input type is anything
     type In = A;
+    // Output type is always unit type
     type Out = value::Unit;
 
     fn exec(&self, _value: Self::In) -> Result<Self::Out, Error> {
+        // Always return unit value
         Ok(value::Unit::Unit)
     }
 }
 
 impl<A> Combinator for Iden<A>
 where
+    // Any input type
     A: Value,
 {
+    // Input type is anything
     type In = A;
+    // Output type equals input type
     type Out = A;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Always return input value
         Ok(value)
     }
 }
 
 impl<T, B> Combinator for Take<T, B>
 where
+    // Any inner combinator
     T: Combinator,
+    // Any type that will be ignored
     B: Value,
 {
+    // Input type is product type of:
+    // 1) Input type of inner combinator, and
+    // 2) Something which will be ignored (`B`)
     type In = value::Product<T::In, B>;
+    // Output type is output type of inner combinator
     type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Get left inner value of product value (ignore the right inner value)
         let (a, _) = value.unwrap_product()?;
+        // Execute inner combinator on left inner value
         let c = self.inner.exec(a.clone())?;
+        // Return output of inner combinator
         Ok(c)
     }
 }
 
 impl<T, A> Combinator for Drop<T, A>
 where
+    // Any inner combinator
     T: Combinator,
+    // Any type that will be ignored
     A: Value,
 {
+    // Input type is product type of:
+    // 1) Something which will be ignored (`A`), and
+    // 2) Input type of inner combinator
     type In = value::Product<A, T::In>;
+    // Output type is output type of inner combinator
     type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Get right inner value of product value (ignore the left inner value)
         let (_, b) = value.unwrap_product()?;
+        // Execute inner combinator on right inner value
         let c = self.inner.exec(b.clone())?;
+        // Return output of inner combinator
         Ok(c)
     }
 }
 
 impl<T, C> Combinator for Injl<T, C>
 where
+    // Any inner combinator
     T: Combinator,
+    // Any type that will be added
     C: Value,
 {
+    // Input type is input of inner combinator
     type In = T::In;
+    // Output type is sum type of:
+    // 1) Output type of inner combinator, and
+    // 2) Something which was added (`C`)
     type Out = value::Sum<T::Out, C>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Execute inner combinator on input value
         let c = self.inner.exec(value)?;
+        // Wrap output of inner combinator in left value
         Ok(value::Sum::Left(c))
     }
 }
 
 impl<T, B> Combinator for Injr<T, B>
 where
+    // Any inner combinator
     T: Combinator,
+    // Any type that will be added
     B: Value,
 {
+    // Input type is input type of inner combinator
     type In = T::In;
+    // Output type is sum type of:
+    // 1) Something which was added (`B`), and
+    // 2) Output type of inner combinator
     type Out = value::Sum<B, T::Out>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Execute inner combinator on input value
         let c = self.inner.exec(value)?;
+        // Wrap output of inner combinator in right value
         Ok(value::Sum::Right(c))
     }
 }
 
 impl<S, T> Combinator for Pair<S, T>
 where
-    S: Combinator<In = T::In>,
-    T: Combinator,
+    // Any left inner combinator
+    S: Combinator,
+    // Any right inner combinator
+    // whose input type equals the input type of the left inner combinator
+    T: Combinator<In = S::In>,
 {
+    // Input type is input type of left inner combinator
     type In = S::In;
+    // Output type is product type of
+    // 1) Output type of left inner combinator, and
+    // 2) Output type of right inner combinator
     type Out = value::Product<S::Out, T::Out>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Execute left inner combinator on input value
         let b = self.left.exec(value.clone())?;
+        // Execute right inner combinator on (same) input value
         let c = self.right.exec(value)?;
+        // Return product value of output of both inner combinators
         Ok(value::Product::Product(b, c))
     }
 }
 
 impl<S, T> Combinator for Comp<S, T>
 where
-    S: Combinator<Out = T::In>,
-    T: Combinator,
+    // Any left inner combinator
+    S: Combinator,
+    // Any right inner combinator
+    // whose output type equals the input type of the left inner combinator
+    T: Combinator<In = S::Out>,
 {
+    // Input type is input type of left inner combinator
     type In = S::In;
+    // Output type is output type of right inner combinator
     type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Execute left inner combinator on input value
         let b = self.left.exec(value)?;
+        // Execute right inner combinator on output of left inner combinator
         let c = self.right.exec(b)?;
+        // Return output of right inner combinator
         Ok(c)
     }
 }
 
 impl<S, T, AC, BC> Combinator for Case<S, T>
 where
-    S: Combinator<In = AC, Out = T::Out>,
-    T: Combinator<In = BC>,
-    AC: Value<B = BC::B>,
-    BC: Value,
+    // Any left inner combinator
+    // whose input type is `AC`
+    S: Combinator<In = AC>,
+    // Any right inner combinator
+    // whose input type is `BC` and
+    // whose output type equals the output type of the left inner combinator
+    T: Combinator<In = BC, Out = S::Out>,
+    // Any type
+    AC: Value,
+    // Any type
+    // whose right subtype equals the right subtype of `AC`
+    BC: Value<B = AC::B>,
 {
+    // Input type is product type of:
+    // 1) Sum type of:
+    //    a) Left subtype of input type of left inner combinator
+    //    b) Left subtype of input type of right inner combinator
+    // 2) Right subtype of input type of left inner combinator
+    //    (Equals right subtype of input type of right inner combinator)
     type In = value::Product<value::Sum<AC::A, BC::A>, AC::B>;
+    // Output type is output type of left inner combinator
+    // (Equals output type of right inner combinator)
     type Out = S::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
+        // Get left and right inner value of input value
         let (ab, c) = value.unwrap_product()?;
+        // Get inner value if `ab` is a left value
         if let Ok(a) = ab.unwrap_left() {
+            // Construct input value for left inner combinator
             let ac = AC::wrap_product(a.clone(), c.clone())?;
+            // Execute left inner combinator on input value
             let d = self.left.exec(ac)?;
+            // Return output value of left inner combinator
             Ok(d)
+        // Get inner value if `ab` is a right value
         } else if let Ok(b) = ab.unwrap_right() {
+            // Construct input value for right inner combinator
             let bc = BC::wrap_product(b.clone(), c.clone())?;
+            // Execute right inner combinator on input value
             let d = self.right.exec(bc)?;
+            // Return output value of right inner combinator
             Ok(d)
+        // `ab` has to be either left or right value
         } else {
+            // Unreachable if input value has correct input type
             Err(Error::CaseSum)
         }
     }
@@ -479,7 +571,7 @@ macro_rules! full_add_2n {
                 pair(i(i(h())), comp(pair(i(o(h())), o(h())), $full_add_n()))
             }
 
-            /// `full_add_2n_part2 : 2^n × (2 × 2^n) → 2 × 2^2n`
+            /// `full_add_2n_part3 : 2^n × (2 × 2^n) → 2 × 2^2n`
             fn full_add_2n_part3() -> $FullAdd2nPart3 {
                 pair(i(o(h())), pair(i(i(h())), o(h())))
             }
