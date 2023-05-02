@@ -162,7 +162,7 @@ where
     type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
-        let (a, _) = value.split_product()?;
+        let (a, _) = value.unwrap_product()?;
         let c = self.inner.exec(a.clone())?;
         Ok(c)
     }
@@ -177,7 +177,7 @@ where
     type Out = T::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
-        let (_, b) = value.split_product()?;
+        let (_, b) = value.unwrap_product()?;
         let c = self.inner.exec(b.clone())?;
         Ok(c)
     }
@@ -252,13 +252,13 @@ where
     type Out = S::Out;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
-        let (ab, c) = value.split_product()?;
-        if let Ok(a) = ab.split_left() {
-            let ac = AC::join_product(a.clone(), c.clone())?;
+        let (ab, c) = value.unwrap_product()?;
+        if let Ok(a) = ab.unwrap_left() {
+            let ac = AC::wrap_product(a.clone(), c.clone())?;
             let d = self.left.exec(ac)?;
             Ok(d)
-        } else if let Ok(b) = ab.split_right() {
-            let bc = BC::join_product(b.clone(), c.clone())?;
+        } else if let Ok(b) = ab.unwrap_right() {
+            let bc = BC::wrap_product(b.clone(), c.clone())?;
             let d = self.right.exec(bc)?;
             Ok(d)
         } else {

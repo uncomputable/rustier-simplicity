@@ -1,17 +1,27 @@
 use crate::display::DisplayDepth;
 use crate::error::Error;
 
+/// Generic value.
 pub trait Value: DisplayDepth + Clone {
+    /// Left subtype
     type A: Value;
+    /// Right subtype
     type B: Value;
 
-    fn split_left(&self) -> Result<&Self::A, Error>;
+    /// Return the inner value if the value is a left value.
+    /// Otherwise return error.
+    fn unwrap_left(&self) -> Result<&Self::A, Error>;
 
-    fn split_right(&self) -> Result<&Self::B, Error>;
+    /// Return the inner value if the value is a right value.
+    /// Otherwise return error.
+    fn unwrap_right(&self) -> Result<&Self::B, Error>;
 
-    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error>;
+    /// Return the left and right inner values if the value is a product value.
+    /// Otherwise return error.
+    fn unwrap_product(&self) -> Result<(&Self::A, &Self::B), Error>;
 
-    fn join_product(a: Self::A, b: Self::B) -> Result<Self, Error>;
+    /// Return a product value of `a` and `b` if the type is a product type.
+    fn wrap_product(a: Self::A, b: Self::B) -> Result<Self, Error>;
 }
 
 /// Atomic unit type.
@@ -50,19 +60,19 @@ impl Value for Unit {
     type A = Unit;
     type B = Unit;
 
-    fn split_left(&self) -> Result<&Self::A, Error> {
+    fn unwrap_left(&self) -> Result<&Self::A, Error> {
         Err(Error::SplitLeft)
     }
 
-    fn split_right(&self) -> Result<&Self::B, Error> {
+    fn unwrap_right(&self) -> Result<&Self::B, Error> {
         Err(Error::SplitRight)
     }
 
-    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error> {
+    fn unwrap_product(&self) -> Result<(&Self::A, &Self::B), Error> {
         Err(Error::SplitProduct)
     }
 
-    fn join_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
+    fn wrap_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
         Err(Error::JoinProduct)
     }
 }
@@ -71,25 +81,25 @@ impl<A: Value, B: Value> Value for Sum<A, B> {
     type A = A;
     type B = B;
 
-    fn split_left(&self) -> Result<&Self::A, Error> {
+    fn unwrap_left(&self) -> Result<&Self::A, Error> {
         match self {
             Sum::Left(a) => Ok(a),
             Sum::Right(_b) => Err(Error::SplitLeft),
         }
     }
 
-    fn split_right(&self) -> Result<&Self::B, Error> {
+    fn unwrap_right(&self) -> Result<&Self::B, Error> {
         match self {
             Sum::Left(_a) => Err(Error::SplitRight),
             Sum::Right(b) => Ok(b),
         }
     }
 
-    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error> {
+    fn unwrap_product(&self) -> Result<(&Self::A, &Self::B), Error> {
         Err(Error::SplitProduct)
     }
 
-    fn join_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
+    fn wrap_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
         Err(Error::JoinProduct)
     }
 }
@@ -98,21 +108,21 @@ impl<A: Value, B: Value> Value for Product<A, B> {
     type A = A;
     type B = B;
 
-    fn split_left(&self) -> Result<&Self::A, Error> {
+    fn unwrap_left(&self) -> Result<&Self::A, Error> {
         Err(Error::SplitLeft)
     }
 
-    fn split_right(&self) -> Result<&Self::B, Error> {
+    fn unwrap_right(&self) -> Result<&Self::B, Error> {
         Err(Error::SplitRight)
     }
 
-    fn split_product(&self) -> Result<(&Self::A, &Self::B), Error> {
+    fn unwrap_product(&self) -> Result<(&Self::A, &Self::B), Error> {
         match self {
             Product::Product(a, b) => Ok((a, b)),
         }
     }
 
-    fn join_product(a: Self::A, b: Self::B) -> Result<Self, Error> {
+    fn wrap_product(a: Self::A, b: Self::B) -> Result<Self, Error> {
         Ok(Product::Product(a, b))
     }
 }
