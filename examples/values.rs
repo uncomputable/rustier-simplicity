@@ -30,14 +30,14 @@ fn main() {
     println!("Product value:\n{}\n", unit_times_unit);
 
     // Bit values
-    let false_bit = value::bit_to_value(false);
+    let false_bit = value::from_bit(false);
     println!("False bit value:\n{}\n", false_bit);
 
-    let true_bit = value::bit_to_value(true);
+    let true_bit = value::from_bit(true);
     println!("True bit value:\n{}\n", true_bit);
 
     // Byte values
-    let byte = value::byte_to_value(12);
+    let byte = value::from_byte(12);
     println!("Byte value:\n{}\n", byte);
 
     // Word values

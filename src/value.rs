@@ -127,10 +127,13 @@ impl<A: Value, B: Value> Value for Product<A, B> {
     }
 }
 
-/// Bits are sums of unit
+/// Bit type.
+///
+/// Bits are sums of unit.
 pub type Bit = Sum<Unit, Unit>;
 
-pub fn bit_to_value(bit: bool) -> Bit {
+/// Convert a bit to a value.
+pub fn from_bit(bit: bool) -> Bit {
     match bit {
         // False bit becomes left value that wraps unit value
         false => Sum::Left(Unit::Unit),
@@ -139,21 +142,24 @@ pub fn bit_to_value(bit: bool) -> Bit {
     }
 }
 
-/// Bytes are nested products of eighth bits
+/// Byte type.
+///
+/// Bytes are nested products of eighth bits.
 pub type Byte = Product<
     Product<Product<Bit, Bit>, Product<Bit, Bit>>,
     Product<Product<Bit, Bit>, Product<Bit, Bit>>,
 >;
 
-pub fn byte_to_value(n: u8) -> Byte {
-    let first_bit = bit_to_value(n & 128 != 0);
-    let second_bit = bit_to_value(n & 64 != 0);
-    let third_bit = bit_to_value(n & 32 != 0);
-    let forth_bit = bit_to_value(n & 16 != 0);
-    let fifth_bit = bit_to_value(n & 8 != 0);
-    let sixth_bit = bit_to_value(n & 4 != 0);
-    let seventh_bit = bit_to_value(n & 2 != 0);
-    let eighth_bit = bit_to_value(n & 1 != 0);
+/// Convert a byte to a value.
+pub fn from_byte(n: u8) -> Byte {
+    let first_bit = from_bit(n & 128 != 0);
+    let second_bit = from_bit(n & 64 != 0);
+    let third_bit = from_bit(n & 32 != 0);
+    let forth_bit = from_bit(n & 16 != 0);
+    let fifth_bit = from_bit(n & 8 != 0);
+    let sixth_bit = from_bit(n & 4 != 0);
+    let seventh_bit = from_bit(n & 2 != 0);
+    let eighth_bit = from_bit(n & 1 != 0);
 
     Product::Product(
         Product::Product(
