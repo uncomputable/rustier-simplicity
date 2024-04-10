@@ -1,9 +1,5 @@
-use simplicity_playground::combinator::{
-    _drop, case, comp, full_add_2, full_add_64, half_add_1, iden, injl, injr, not, pair, unit,
-    Combinator,
-};
-use simplicity_playground::value;
-use simplicity_playground::value::{Bit, Word1, Word2, Word64};
+use simplicity_playground::combinator::*;
+use simplicity_playground::value::*;
 
 fn main() {
     // Unit Constant
@@ -49,7 +45,7 @@ fn main() {
 
         for bit1 in [false, true] {
             let bit1_value = Bit::from(bit1);
-            let input_value = value::Product::Product(bit0_value, bit1_value);
+            let input_value = Product::Product(bit0_value, bit1_value);
             let output_value = half_adder.exec(input_value).expect("exec half_adder");
             // First bit is carry, second bit is sum
             println!("{} + {} = {}\n", bit0, bit1, output_value);
@@ -69,13 +65,11 @@ fn main() {
 
             for b in 0..4 {
                 let b_value = Word2::from_unwrap(b);
-                let input_value = value::Product::Product(
-                    carry_in_value,
-                    value::Product::Product(a_value, b_value),
-                );
+                let input_value =
+                    Product::Product(carry_in_value, Product::Product(a_value, b_value));
                 let output_value = full_adder.exec(input_value).expect("Execute full adder");
                 let (carry_out_value, sum_value) = match output_value {
-                    value::Product::Product(x, y) => (x, y),
+                    Product::Product(x, y) => (x, y),
                 };
                 let carry_out = u8::from(&carry_out_value);
                 let sum = u8::from(&sum_value);
@@ -99,13 +93,11 @@ fn main() {
 
             for b in 0..100 {
                 let b_value = Word64::from(b);
-                let input_value = value::Product::Product(
-                    carry_in_value,
-                    value::Product::Product(a_value, b_value),
-                );
+                let input_value =
+                    Product::Product(carry_in_value, Product::Product(a_value, b_value));
                 let output_value = big_adder.exec(input_value).expect("Execute big adder");
                 let (carry_out_value, sum_value) = match output_value {
-                    value::Product::Product(x, y) => (x, y),
+                    Product::Product(x, y) => (x, y),
                 };
                 let carry_out = u8::from(&carry_out_value);
                 let sum = u64::from(&sum_value);
