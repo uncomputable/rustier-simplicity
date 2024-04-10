@@ -758,3 +758,67 @@ add_n!(
     WrappingAdd64,
     FullAdd64,
 );
+
+/// for_while_1 : C × A → B + A
+/// where
+/// f : (C × 2) × A → B + A
+pub fn for_while_1<F, C: Value, A: Value, B: Value>(
+    f: F,
+) -> impl Combinator<In = Product<C, A>, Out = Sum<B, A>> + Clone
+where
+    F: Combinator<In = Product<Product<C, Bit>, A>, Out = Sum<B, A>> + Clone,
+{
+    let fst_input = pair(
+        pair(o::<_, A>(h::<C>()), _false::<Product<C, A>>()),
+        i::<C, _>(h::<A>()),
+    );
+    let fst_output = comp(fst_input, f.clone());
+    let case_input = pair(fst_output, o::<_, A>(h::<C>()));
+    let case_left = injl::<_, A>(o::<_, C>(h::<B>()));
+    let snd_input = pair(
+        pair(i::<A, _>(h::<C>()), _true::<Product<A, C>>()),
+        o::<_, C>(h::<A>()),
+    );
+    let snd_output = comp(snd_input, f);
+    let case = case(case_left, snd_output);
+    comp(case_input, case)
+}
+
+macro_rules! for_while_2n {
+    (
+        $Wordn: path,
+        $Word2n: path,
+        $for_while_n: ident,
+        $for_while_2n: ident,
+    ) => {
+        /// for_while_n : C × A → B + A
+        /// where
+        /// f : (C × 2^n) × A → B + A
+        pub fn $for_while_2n<F, C: Value, A: Value, B: Value>(
+            f: F,
+        ) -> impl Combinator<In = Product<C, A>, Out = Sum<B, A>> + Clone
+        where
+            F: Combinator<In = Product<Product<C, $Word2n>, A>, Out = Sum<B, A>> + Clone,
+        {
+            let input = pair(
+                pair(
+                    o::<_, A>(o::<_, $Wordn>(o::<_, $Wordn>(h::<C>()))),
+                    pair(
+                        o::<_, A>(o::<_, $Wordn>(i::<C, _>(h::<$Wordn>()))),
+                        o::<_, A>(i::<Product<C, $Wordn>, _>(h::<$Wordn>())),
+                    ),
+                ),
+                i::<Product<Product<C, $Wordn>, $Wordn>, _>(h::<A>()),
+            );
+            let output = comp(input, f);
+            let inner_loop = $for_while_n(output);
+            $for_while_n(inner_loop)
+        }
+    };
+}
+
+for_while_2n!(Word1, Word2, for_while_1, for_while_2,);
+
+for_while_2n!(Word2, Word4, for_while_2, for_while_4,);
+
+for_while_2n!(Word4, Word8, for_while_4, for_while_8,);
