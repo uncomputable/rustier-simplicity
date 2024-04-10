@@ -4,7 +4,7 @@ use crate::value::*;
 use std::marker::PhantomData;
 
 /// Generic combinator.
-pub trait Combinator: DisplayDepth {
+pub trait Combinator: DisplayDepth + Copy {
     /// Input type
     type In: Value;
     /// Output type
@@ -185,7 +185,7 @@ where
         // Get left inner value of product value (ignore the right inner value)
         let (a, _) = value.as_product()?;
         // Execute inner combinator on left inner value
-        let c = self.inner.exec(a.clone())?;
+        let c = self.inner.exec(*a)?;
         // Return output of inner combinator
         Ok(c)
     }
@@ -209,7 +209,7 @@ where
         // Get right inner value of product value (ignore the left inner value)
         let (_, b) = value.as_product()?;
         // Execute inner combinator on right inner value
-        let c = self.inner.exec(b.clone())?;
+        let c = self.inner.exec(*b)?;
         // Return output of inner combinator
         Ok(c)
     }
@@ -276,7 +276,7 @@ where
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute left inner combinator on input value
-        let b = self.left.exec(value.clone())?;
+        let b = self.left.exec(value)?;
         // Execute right inner combinator on (same) input value
         let c = self.right.exec(value)?;
         // Return product value of output of both inner combinators
@@ -339,7 +339,7 @@ where
         // Get inner value if `ab` is a left value
         if let Ok(a) = ab.as_left() {
             // Construct input value for left inner combinator
-            let ac = AC::product(a.clone(), c.clone())?;
+            let ac = AC::product(*a, *c)?;
             // Execute left inner combinator on input value
             let d = self.left.exec(ac)?;
             // Return output value of left inner combinator
@@ -347,7 +347,7 @@ where
         // Get inner value if `ab` is a right value
         } else if let Ok(b) = ab.as_right() {
             // Construct input value for right inner combinator
-            let bc = BC::product(b.clone(), c.clone())?;
+            let bc = BC::product(*b, *c)?;
             // Execute right inner combinator on input value
             let d = self.right.exec(bc)?;
             // Return output value of right inner combinator
@@ -807,15 +807,15 @@ add_n!(
 /// f : (C × 2) × A → B + A
 pub fn for_while_1<F, C: Value, A: Value, B: Value>(
     f: F,
-) -> impl Combinator<In = Product<C, A>, Out = Sum<B, A>> + Clone
+) -> impl Combinator<In = Product<C, A>, Out = Sum<B, A>>
 where
-    F: Combinator<In = Product<Product<C, Bit>, A>, Out = Sum<B, A>> + Clone,
+    F: Combinator<In = Product<Product<C, Bit>, A>, Out = Sum<B, A>>,
 {
     let fst_input = pair(
         pair(o::<_, A>(h::<C>()), _false::<Product<C, A>>()),
         i::<C, _>(h::<A>()),
     );
-    let fst_output = comp(fst_input, f.clone());
+    let fst_output = comp(fst_input, f);
     let case_input = pair(fst_output, o::<_, A>(h::<C>()));
     let case_left = injl::<_, A>(o::<_, C>(h::<B>()));
     let snd_input = pair(
@@ -839,9 +839,9 @@ macro_rules! for_while_2n {
         /// f : (C × 2^n) × A → B + A
         pub fn $for_while_2n<F, C: Value, A: Value, B: Value>(
             f: F,
-        ) -> impl Combinator<In = Product<C, A>, Out = Sum<B, A>> + Clone
+        ) -> impl Combinator<In = Product<C, A>, Out = Sum<B, A>>
         where
-            F: Combinator<In = Product<Product<C, $Word2n>, A>, Out = Sum<B, A>> + Clone,
+            F: Combinator<In = Product<Product<C, $Word2n>, A>, Out = Sum<B, A>>,
         {
             let input = pair(
                 pair(

@@ -2,7 +2,7 @@ use crate::display::DisplayDepth;
 use crate::error::Error;
 
 /// Type for a range of values.
-pub trait Value: DisplayDepth + Clone {
+pub trait Value: DisplayDepth + Copy {
     /// Left subtype
     type A: Value;
     /// Right subtype
