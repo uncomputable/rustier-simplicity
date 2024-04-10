@@ -482,7 +482,7 @@ pub type H<A: Value> = Iden<A>;
 #[allow(type_alias_bounds)]
 pub type O<T: Combinator, B: Value> = Take<T, B>;
 #[allow(type_alias_bounds)]
-pub type I<T: Combinator, A: Value> = Drop<T, A>;
+pub type I<A: Value, T: Combinator> = Drop<T, A>;
 
 /// `h : A → A`
 ///
@@ -501,7 +501,7 @@ pub fn o<T: Combinator, B: Value>(t: T) -> O<T, B> {
 /// `i t : A × B → C where t : B → C`
 ///
 /// Same as `drop t`
-pub fn i<T: Combinator, A: Value>(t: T) -> I<T, A> {
+pub fn i<A: Value, T: Combinator>(t: T) -> I<A, T> {
     _drop(t)
 }
 
@@ -511,14 +511,14 @@ macro_rules! full_add_2n {
     $FullAddn: ident, $FullAdd2n: ident,
     $FullAdd2nPart1a: ident, $FullAdd2nPart1b: ident, $FullAdd2nPart1: ident, $FullAdd2nPart2: ident, $FullAdd2nPart3: ident) => {
         type $FullAdd2nPart1a = Drop<
-            Pair<O<O<H<$Wordn>, $Wordn>, $Word2n>, I<O<H<$Wordn>, $Wordn>, $Word2n>>,
+            Pair<O<O<H<$Wordn>, $Wordn>, $Word2n>, I<$Word2n, O<H<$Wordn>, $Wordn>>>,
             value::Bit,
         >;
 
         type $FullAdd2nPart1b = Pair<
             O<H<value::Bit>, $Word4n>,
             Drop<
-                Pair<O<I<H<$Wordn>, $Wordn>, $Word2n>, I<I<H<$Wordn>, $Wordn>, $Word2n>>,
+                Pair<O<I<$Wordn, H<$Wordn>>, $Word2n>, I<$Word2n, I<$Wordn, H<$Wordn>>>>,
                 value::Bit,
             >,
         >;
@@ -526,10 +526,10 @@ macro_rules! full_add_2n {
         type $FullAdd2nPart1 = Pair<$FullAdd2nPart1a, Comp<$FullAdd2nPart1b, $FullAddn>>;
 
         type $FullAdd2nPart2 = Pair<
-            I<I<H<$Wordn>, value::Bit>, $Word2n>,
+            I<$Word2n, I<value::Bit, H<$Wordn>>>,
             Comp<
                 Pair<
-                    I<O<H<value::Bit>, $Wordn>, $Word2n>,
+                    I<$Word2n, O<H<value::Bit>, $Wordn>>,
                     O<H<$Word2n>, value::Product<value::Bit, $Wordn>>,
                 >,
                 $FullAddn,
@@ -537,9 +537,9 @@ macro_rules! full_add_2n {
         >;
 
         type $FullAdd2nPart3 = Pair<
-            I<O<H<value::Bit>, $Wordn>, $Wordn>,
+            I<$Wordn, O<H<value::Bit>, $Wordn>>,
             Pair<
-                I<I<H<$Wordn>, value::Bit>, $Wordn>,
+                I<$Wordn, I<value::Bit, H<$Wordn>>>,
                 O<H<$Wordn>, value::Product<value::Bit, $Wordn>>,
             >,
         >;
