@@ -361,17 +361,17 @@ where
 }
 
 /// `unit : A → 1`
-pub fn only<A>() -> Only<A> {
+pub const fn only<A>() -> Only<A> {
     Only { _i: PhantomData }
 }
 
 /// `iden : A → A`
-pub fn iden<A>() -> Iden<A> {
+pub const fn iden<A>() -> Iden<A> {
     Iden { _i: PhantomData }
 }
 
 /// `take t : A × B → C where t : A → C`
-pub fn take<T, B>(t: T) -> Take<T, B> {
+pub const fn take<T, B>(t: T) -> Take<T, B> {
     Take {
         inner: t,
         _i: PhantomData,
@@ -379,7 +379,7 @@ pub fn take<T, B>(t: T) -> Take<T, B> {
 }
 
 /// `drop t : A × B → C where t : B → C`
-pub fn _drop<A, T>(t: T) -> Drop<A, T> {
+pub const fn _drop<A, T>(t: T) -> Drop<A, T> {
     Drop {
         inner: t,
         _i: PhantomData,
@@ -387,7 +387,7 @@ pub fn _drop<A, T>(t: T) -> Drop<A, T> {
 }
 
 /// `injl t : A → B + C where t : A → B`
-pub fn injl<T, C>(t: T) -> Injl<T, C> {
+pub const fn injl<T, C>(t: T) -> Injl<T, C> {
     Injl {
         inner: t,
         _i: PhantomData,
@@ -395,7 +395,7 @@ pub fn injl<T, C>(t: T) -> Injl<T, C> {
 }
 
 /// `injr t : A → B + C where t : A → C`
-pub fn injr<B, T>(t: T) -> Injr<B, T> {
+pub const fn injr<B, T>(t: T) -> Injr<B, T> {
     Injr {
         inner: t,
         _i: PhantomData,
@@ -403,17 +403,17 @@ pub fn injr<B, T>(t: T) -> Injr<B, T> {
 }
 
 /// `pair s t : A → B × C where s : A → B and t : A → C`
-pub fn pair<S, T>(s: S, t: T) -> Pair<S, T> {
+pub const fn pair<S, T>(s: S, t: T) -> Pair<S, T> {
     Pair { left: s, right: t }
 }
 
 /// `comp s t : A → C where s : A → B and t : B → C`
-pub fn comp<S, T>(s: S, t: T) -> Comp<S, T> {
+pub const fn comp<S, T>(s: S, t: T) -> Comp<S, T> {
     Comp { left: s, right: t }
 }
 
 /// `case s t : (A + B) × C → D where s : A × C → D and t : B × C → D`
-pub fn case<S, T>(s: S, t: T) -> Case<S, T> {
+pub const fn case<S, T>(s: S, t: T) -> Case<S, T> {
     Case { left: s, right: t }
 }
 
@@ -421,12 +421,12 @@ pub type False<A> = Injl<Only<A>, Unit>;
 pub type True<A> = Injr<Unit, Only<A>>;
 
 /// `false : A → 2`
-pub fn _false<A>() -> False<A> {
+pub const fn _false<A>() -> False<A> {
     injl(only())
 }
 
 /// `true : A → 2`
-pub fn _true<A>() -> True<A> {
+pub const fn _true<A>() -> True<A> {
     injr(only())
 }
 
@@ -435,12 +435,12 @@ pub type Cond<S, T> = Case<Drop<Unit, T>, Drop<Unit, S>>;
 pub type Not<T: Combinator> = Comp<Pair<T, Only<T::In>>, Cond<False<Unit>, True<Unit>>>;
 
 /// `cond : 2 × A → B where s : A → B and t : A → B`
-pub fn cond<S, T>(s: S, t: T) -> Cond<S, T> {
+pub const fn cond<S, T>(s: S, t: T) -> Cond<S, T> {
     case(_drop(t), _drop(s))
 }
 
 /// `not : A → 2 where t : A → 2`
-pub fn not<T: Combinator>(t: T) -> Not<T> {
+pub const fn not<T: Combinator>(t: T) -> Not<T> {
     comp(pair(t, only()), cond(_false(), _true()))
 }
 
@@ -450,22 +450,22 @@ pub type FullAdd1 = Pair<Maj1, Xor3>;
 pub type HalfAdd1 = Cond<Pair<Iden<Bit>, Not<Iden<Bit>>>, Pair<False<Bit>, Iden<Bit>>>;
 
 /// `maj : 2 × (2 × 2) → 2`
-pub fn maj() -> Maj1 {
+pub const fn maj() -> Maj1 {
     cond(cond(_true(), iden()), cond(iden(), _false()))
 }
 
 /// `xor3 : 2 × (2 × 2) → 2`
-pub fn xor3() -> Xor3 {
+pub const fn xor3() -> Xor3 {
     cond(cond(iden(), not(iden())), cond(not(iden()), iden()))
 }
 
 /// `full_add_1 : 2 × (2 × 2) → 2 × 2`
-pub fn full_add_1() -> FullAdd1 {
+pub const fn full_add_1() -> FullAdd1 {
     pair(maj(), xor3())
 }
 
 /// `half_add1 : 2 × 2 → 2 × 2`
-pub fn half_add_1() -> HalfAdd1 {
+pub const fn half_add_1() -> HalfAdd1 {
     cond(pair(iden(), not(iden())), pair(_false(), iden()))
 }
 
@@ -476,21 +476,21 @@ pub type I<A, T> = Drop<A, T>;
 /// `h : A → A`
 ///
 /// Same as `iden`
-pub fn h<A>() -> H<A> {
+pub const fn h<A>() -> H<A> {
     iden()
 }
 
 /// `o t : A × B → C where t : A → C`
 ///
 /// Same as `take t`
-pub fn o<T, B>(t: T) -> O<T, B> {
+pub const fn o<T, B>(t: T) -> O<T, B> {
     take(t)
 }
 
 /// `i t : A × B → C where t : B → C`
 ///
 /// Same as `drop t`
-pub fn i<A, T>(t: T) -> I<A, T> {
+pub const fn i<A, T>(t: T) -> I<A, T> {
     _drop(t)
 }
 
@@ -503,37 +503,37 @@ pub type Scribe0u32<A> = Pair<Scribe0u16<A>, Scribe0u16<A>>;
 pub type Scribe0u64<A> = Pair<Scribe0u32<A>, Scribe0u32<A>>;
 
 /// scribe_0u1 : A → 2^1
-pub fn scribe_0u1<A>() -> Scribe0u1<A> {
+pub const fn scribe_0u1<A>() -> Scribe0u1<A> {
     _false()
 }
 
 /// scribe_0u2 : A → 2^2
-pub fn scribe_0u2<A>() -> Scribe0u2<A> {
+pub const fn scribe_0u2<A>() -> Scribe0u2<A> {
     pair(scribe_0u1(), scribe_0u1())
 }
 
 /// scribe_0u4 : A → 2^4
-pub fn scribe_0u4<A>() -> Scribe0u4<A> {
+pub const fn scribe_0u4<A>() -> Scribe0u4<A> {
     pair(scribe_0u2(), scribe_0u2())
 }
 
 /// scribe_0u8 : A → 2^8
-pub fn scribe_0u8<A>() -> Scribe0u8<A> {
+pub const fn scribe_0u8<A>() -> Scribe0u8<A> {
     pair(scribe_0u4(), scribe_0u4())
 }
 
 /// scribe_0u16 : A → 2^16
-pub fn scribe_0u16<A>() -> Scribe0u16<A> {
+pub const fn scribe_0u16<A>() -> Scribe0u16<A> {
     pair(scribe_0u8(), scribe_0u8())
 }
 
 /// scribe_0u32 : A → 2^32
-pub fn scribe_0u32<A>() -> Scribe0u32<A> {
+pub const fn scribe_0u32<A>() -> Scribe0u32<A> {
     pair(scribe_0u16(), scribe_0u16())
 }
 
 /// scribe_0u64 : A → 2^64
-pub fn scribe_0u64<A>() -> Scribe0u64<A> {
+pub const fn scribe_0u64<A>() -> Scribe0u64<A> {
     pair(scribe_0u32(), scribe_0u32())
 }
 
@@ -578,19 +578,19 @@ macro_rules! full_add_2n {
         type $FullAdd2n = Comp<$FullAdd2nPart1, Comp<$FullAdd2nPart2, $FullAdd2nPart3>>;
 
         /// full_add_n : 2 × (2^n × 2^n) → 2 × 2^n
-        pub fn $full_add_2n() -> $FullAdd2n {
+        pub const fn $full_add_2n() -> $FullAdd2n {
             /// `full_add_2n_part1a : 2 × (2^2n × 2^2n) → 2^n × 2^n`
-            fn full_add_2n_part1a() -> $FullAdd2nPart1a {
+            const fn full_add_2n_part1a() -> $FullAdd2nPart1a {
                 _drop(pair(o(o(h())), i(o(h()))))
             }
 
             /// `full_add_2n_part1b : 2 × (2^2n × 2^2n) → 2 × 2^n`
-            fn full_add_2n_part1b() -> $FullAdd2nPart1b {
+            const fn full_add_2n_part1b() -> $FullAdd2nPart1b {
                 pair(o(h()), _drop(pair(o(i(h())), i(i(h())))))
             }
 
             /// `full_add_2n_part1 : 2 × (2^2n × 2^2n) → 2^2n × (2 × 2^n)`
-            fn full_add_2n_part1() -> $FullAdd2nPart1 {
+            const fn full_add_2n_part1() -> $FullAdd2nPart1 {
                 pair(
                     full_add_2n_part1a(),
                     comp(full_add_2n_part1b(), $full_add_n()),
@@ -598,12 +598,12 @@ macro_rules! full_add_2n {
             }
 
             /// `full_add_2n_part2 : 2^2n × (2 × 2^n) → 2^n × (2 × 2^n)`
-            fn full_add_2n_part2() -> $FullAdd2nPart2 {
+            const fn full_add_2n_part2() -> $FullAdd2nPart2 {
                 pair(i(i(h())), comp(pair(i(o(h())), o(h())), $full_add_n()))
             }
 
             /// `full_add_2n_part3 : 2^n × (2 × 2^n) → 2 × 2^2n`
-            fn full_add_2n_part3() -> $FullAdd2nPart3 {
+            const fn full_add_2n_part3() -> $FullAdd2nPart3 {
                 pair(i(o(h())), pair(i(i(h())), o(h())))
             }
 
@@ -719,14 +719,14 @@ macro_rules! add_n {
             Comp<Pair<False<Product<$Wordn, $Wordn>>, Iden<Product<$Wordn, $Wordn>>>, $FullAddn>;
 
         /// add_n : 2^n × 2^n → 2 × 2^n
-        pub fn $add_n() -> $Addn {
+        pub const fn $add_n() -> $Addn {
             comp(pair(_false(), iden()), $full_add_n())
         }
 
         type $WrappingAddn = Comp<$Addn, Drop<Bit, Iden<$Wordn>>>;
 
         /// wrapping_add_n : 2^n × 2^n → 2^n
-        pub fn $wrapping_add_n() -> $WrappingAddn {
+        pub const fn $wrapping_add_n() -> $WrappingAddn {
             comp($add_n(), _drop(iden()))
         }
     };

@@ -130,8 +130,9 @@ impl<A: Value, B: Value> Value for Product<A, B> {
 /// Bits are sums of unit.
 pub type Bit = Sum<Unit, Unit>;
 
-impl From<bool> for Bit {
-    fn from(bit: bool) -> Self {
+impl Bit {
+    /// Convert a Boolean into a bit.
+    pub const fn from(bit: bool) -> Self {
         match bit {
             // False bit becomes left value that wraps unit value
             false => Sum::Left(Unit::Unit),
@@ -183,11 +184,11 @@ impl Word1 {
     /// ## Panics
     ///
     /// 1 < n
-    pub fn from_unwrap(n: u8) -> Word1 {
+    pub const fn from_unwrap(n: u8) -> Word1 {
         match n {
             0 => Sum::Left(Unit::Unit),
             1 => Sum::Right(Unit::Unit),
-            _ => panic!("{n} has more than 1 bits"),
+            _ => panic!("Expect 1-bit input"),
         }
     }
 }
@@ -198,9 +199,9 @@ impl Word2 {
     /// ## Panics
     ///
     /// 3 < n
-    pub fn from_unwrap(n: u8) -> Word2 {
+    pub const fn from_unwrap(n: u8) -> Word2 {
         if 3 < n {
-            panic!("{n} has more than 2 bits")
+            panic!("Expect 2-bit input")
         }
         let n1 = (n & 2) / 2;
         let n2 = n & 1;
@@ -210,9 +211,9 @@ impl Word2 {
 
 impl Word4 {
     /// Convert an integer into a 4-bit word.
-    pub fn from_unwrap(n: u8) -> Word4 {
+    pub const fn from_unwrap(n: u8) -> Word4 {
         if 15 < n {
-            panic!("{n} has more than 4 bits")
+            panic!("Expect 4-bit input")
         }
         let n1 = (n & 12) / 4;
         let n2 = n & 3;
@@ -220,40 +221,45 @@ impl Word4 {
     }
 }
 
-impl From<u8> for Word8 {
-    fn from(n: u8) -> Self {
+impl Word8 {
+    /// Convert an integer into a 8-bit word.
+    pub const fn from(n: u8) -> Word8 {
         let n1 = n >> 4;
         let n2 = n & 0xf;
         Product::Product(Word4::from_unwrap(n1), Word4::from_unwrap(n2))
     }
 }
 
-impl From<u16> for Word16 {
-    fn from(n: u16) -> Word16 {
+impl Word16 {
+    /// Convert an integer into a 16-bit word.
+    pub const fn from(n: u16) -> Self {
         let n1 = (n >> 8) as u8;
-        let n2 = (n & 0xff) as u8;
+        let n2 = n as u8; // Implicitly gets the lower 8 bits
         Product::Product(Word8::from(n1), Word8::from(n2))
     }
 }
 
-impl From<u32> for Word32 {
-    fn from(n: u32) -> Word32 {
+impl Word32 {
+    /// Convert an integer into a 32-bit word.
+    pub const fn from(n: u32) -> Self {
         let n1 = (n >> 16) as u16;
-        let n2 = (n & 0xffff) as u16;
+        let n2 = n as u16; // Implicitly gets the lower 16 bits
         Product::Product(Word16::from(n1), Word16::from(n2))
     }
 }
 
-impl From<u64> for Word64 {
-    fn from(n: u64) -> Self {
+impl Word64 {
+    /// Convert an integer into a 64-bit word.
+    pub const fn from(n: u64) -> Self {
         let n1 = (n >> 32) as u32;
-        let n2 = (n & 0xffff_ffff) as u32;
+        let n2 = n as u32; // Implicitly gets the lower 32 bits
         Product::Product(Word32::from(n1), Word32::from(n2))
     }
 }
 
-impl From<u128> for Word128 {
-    fn from(n: u128) -> Self {
+impl Word128 {
+    /// Convert an integer into a 128-bit word.
+    pub const fn from(n: u128) -> Self {
         let n1 = (n >> 64) as u64;
         // Cast picks last bytes
         let n2 = n as u64;
