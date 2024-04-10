@@ -494,6 +494,49 @@ pub fn i<A, T>(t: T) -> I<A, T> {
     _drop(t)
 }
 
+pub type Scribe0u1<A> = False<A>;
+pub type Scribe0u2<A> = Pair<Scribe0u1<A>, Scribe0u1<A>>;
+pub type Scribe0u4<A> = Pair<Scribe0u2<A>, Scribe0u2<A>>;
+pub type Scribe0u8<A> = Pair<Scribe0u4<A>, Scribe0u4<A>>;
+pub type Scribe0u16<A> = Pair<Scribe0u8<A>, Scribe0u8<A>>;
+pub type Scribe0u32<A> = Pair<Scribe0u16<A>, Scribe0u16<A>>;
+pub type Scribe0u64<A> = Pair<Scribe0u32<A>, Scribe0u32<A>>;
+
+/// scribe_0u1 : A → 2^1
+pub fn scribe_0u1<A>() -> Scribe0u1<A> {
+    _false()
+}
+
+/// scribe_0u2 : A → 2^2
+pub fn scribe_0u2<A>() -> Scribe0u2<A> {
+    pair(scribe_0u1(), scribe_0u1())
+}
+
+/// scribe_0u4 : A → 2^4
+pub fn scribe_0u4<A>() -> Scribe0u4<A> {
+    pair(scribe_0u2(), scribe_0u2())
+}
+
+/// scribe_0u8 : A → 2^8
+pub fn scribe_0u8<A>() -> Scribe0u8<A> {
+    pair(scribe_0u4(), scribe_0u4())
+}
+
+/// scribe_0u16 : A → 2^16
+pub fn scribe_0u16<A>() -> Scribe0u16<A> {
+    pair(scribe_0u8(), scribe_0u8())
+}
+
+/// scribe_0u32 : A → 2^32
+pub fn scribe_0u32<A>() -> Scribe0u32<A> {
+    pair(scribe_0u16(), scribe_0u16())
+}
+
+/// scribe_0u64 : A → 2^64
+pub fn scribe_0u64<A>() -> Scribe0u64<A> {
+    pair(scribe_0u32(), scribe_0u32())
+}
+
 macro_rules! full_add_2n {
     (
         $Wordn: path,
