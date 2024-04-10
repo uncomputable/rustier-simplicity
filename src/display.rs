@@ -156,7 +156,7 @@ impl_display_leaf!(combinator::Iden<I>, "iden");
 
 impl_display_single!(combinator::Take<A, I>, "take");
 
-impl_display_single!(combinator::Drop<A, I>, "drop");
+impl_display_single!(combinator::Drop<I, A>, "drop");
 
 impl_display_single!(combinator::Injl<A, I>, "injl");
 

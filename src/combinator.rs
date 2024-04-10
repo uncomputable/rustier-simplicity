@@ -53,7 +53,7 @@ pub struct Take<T: Combinator, B: Value> {
 /// passes the right value `b` of type `B` to the inner combinator,
 /// and returns a value `c` of type `C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Drop<T: Combinator, A: Value> {
+pub struct Drop<A: Value, T: Combinator> {
     pub(crate) inner: T,
     _i: PhantomData<A>,
 }
@@ -190,7 +190,7 @@ where
     }
 }
 
-impl<T, A> Combinator for Drop<T, A>
+impl<A, T> Combinator for Drop<A, T>
 where
     // Any inner combinator
     T: Combinator,
@@ -378,7 +378,7 @@ pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
 }
 
 /// `drop t : A × B → C where t : B → C`
-pub fn _drop<T: Combinator, A: Value>(t: T) -> Drop<T, A> {
+pub fn _drop<A: Value, T: Combinator>(t: T) -> Drop<A, T> {
     Drop {
         inner: t,
         _i: PhantomData,
@@ -432,7 +432,7 @@ pub fn bit_true<A: Value>() -> True<A> {
 }
 
 #[allow(type_alias_bounds)]
-pub type Cond<S: Combinator, T: Combinator> = Case<Drop<T, value::Unit>, Drop<S, value::Unit>>;
+pub type Cond<S: Combinator, T: Combinator> = Case<Drop<value::Unit, T>, Drop<value::Unit, S>>;
 #[allow(type_alias_bounds)]
 pub type Not<T: Combinator> =
     Comp<Pair<T, Unit<T::In>>, Cond<False<value::Unit>, True<value::Unit>>>;
@@ -482,7 +482,7 @@ pub type H<A: Value> = Iden<A>;
 #[allow(type_alias_bounds)]
 pub type O<T: Combinator, B: Value> = Take<T, B>;
 #[allow(type_alias_bounds)]
-pub type I<A: Value, T: Combinator> = Drop<T, A>;
+pub type I<A: Value, T: Combinator> = Drop<A, T>;
 
 /// `h : A → A`
 ///
@@ -511,15 +511,15 @@ macro_rules! full_add_2n {
     $FullAddn: ident, $FullAdd2n: ident,
     $FullAdd2nPart1a: ident, $FullAdd2nPart1b: ident, $FullAdd2nPart1: ident, $FullAdd2nPart2: ident, $FullAdd2nPart3: ident) => {
         type $FullAdd2nPart1a = Drop<
-            Pair<O<O<H<$Wordn>, $Wordn>, $Word2n>, I<$Word2n, O<H<$Wordn>, $Wordn>>>,
             value::Bit,
+            Pair<O<O<H<$Wordn>, $Wordn>, $Word2n>, I<$Word2n, O<H<$Wordn>, $Wordn>>>,
         >;
 
         type $FullAdd2nPart1b = Pair<
             O<H<value::Bit>, $Word4n>,
             Drop<
-                Pair<O<I<$Wordn, H<$Wordn>>, $Word2n>, I<$Word2n, I<$Wordn, H<$Wordn>>>>,
                 value::Bit,
+                Pair<O<I<$Wordn, H<$Wordn>>, $Word2n>, I<$Word2n, I<$Wordn, H<$Wordn>>>>,
             >,
         >;
 
