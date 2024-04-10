@@ -534,7 +534,7 @@ macro_rules! full_add_2n {
 
         type $FullAdd2n = Comp<$FullAdd2nPart1, Comp<$FullAdd2nPart2, $FullAdd2nPart3>>;
 
-        /// `full_add_2n : 2 × (2^2n × 2^2n) → 2 × 2^2n`
+        /// full_add_n : 2 × (2^n × 2^n) → 2 × 2^n
         pub fn $full_add_2n() -> $FullAdd2n {
             /// `full_add_2n_part1a : 2 × (2^2n × 2^2n) → 2^n × 2^n`
             fn full_add_2n_part1a() -> $FullAdd2nPart1a {
