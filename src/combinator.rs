@@ -661,3 +661,100 @@ full_add_2n!(
     FullAdd64Part2,
     FullAdd64Part3,
 );
+
+macro_rules! add_n {
+    (
+        $Wordn: path,
+        $add_n: ident,
+        $wrapping_add_n: ident,
+        $full_add_n: ident,
+        $Addn: ident,
+        $WrappingAddn: ident,
+        $FullAddn: ident,
+    ) => {
+        type $Addn =
+            Comp<Pair<False<Product<$Wordn, $Wordn>>, Iden<Product<$Wordn, $Wordn>>>, $FullAddn>;
+
+        /// add_n : 2^n × 2^n → 2 × 2^n
+        pub fn $add_n() -> $Addn {
+            comp(pair(bit_false(), iden()), $full_add_n())
+        }
+
+        type $WrappingAddn = Comp<$Addn, Drop<Bit, Iden<$Wordn>>>;
+
+        /// wrapping_add_n : 2^n × 2^n → 2^n
+        pub fn $wrapping_add_n() -> $WrappingAddn {
+            comp($add_n(), _drop(iden()))
+        }
+    };
+}
+
+add_n!(
+    Word1,
+    add_1,
+    wrapping_add_1,
+    full_add_1,
+    Add1,
+    WrappingAdd1,
+    FullAdd1,
+);
+
+add_n!(
+    Word2,
+    add_2,
+    wrapping_add_2,
+    full_add_2,
+    Add2,
+    WrappingAdd2,
+    FullAdd2,
+);
+
+add_n!(
+    Word4,
+    add_4,
+    wrapping_add_4,
+    full_add_4,
+    Add4,
+    WrappingAdd4,
+    FullAdd4,
+);
+
+add_n!(
+    Word8,
+    add_8,
+    wrapping_add_8,
+    full_add_8,
+    Add8,
+    WrappingAdd8,
+    FullAdd8,
+);
+
+add_n!(
+    Word16,
+    add_16,
+    wrapping_add_16,
+    full_add_16,
+    Add16,
+    WrappingAdd16,
+    FullAdd16,
+);
+
+add_n!(
+    Word32,
+    add_32,
+    wrapping_add_32,
+    full_add_32,
+    Add32,
+    WrappingAdd32,
+    FullAdd32,
+);
+
+add_n!(
+    Word64,
+    add_64,
+    wrapping_add_64,
+    full_add_64,
+    Add64,
+    WrappingAdd64,
+    FullAdd64,
+);
