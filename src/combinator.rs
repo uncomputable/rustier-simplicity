@@ -338,7 +338,7 @@ where
         // Get inner value if `ab` is a left value
         if let Ok(a) = ab.as_left() {
             // Construct input value for left inner combinator
-            let ac = AC::wrap_product(a.clone(), c.clone())?;
+            let ac = AC::product(a.clone(), c.clone())?;
             // Execute left inner combinator on input value
             let d = self.left.exec(ac)?;
             // Return output value of left inner combinator
@@ -346,7 +346,7 @@ where
         // Get inner value if `ab` is a right value
         } else if let Ok(b) = ab.as_right() {
             // Construct input value for right inner combinator
-            let bc = BC::wrap_product(b.clone(), c.clone())?;
+            let bc = BC::product(b.clone(), c.clone())?;
             // Execute right inner combinator on input value
             let d = self.right.exec(bc)?;
             // Return output value of right inner combinator

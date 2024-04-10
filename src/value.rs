@@ -1,7 +1,7 @@
 use crate::display::DisplayDepth;
 use crate::error::Error;
 
-/// Generic value.
+/// Type for a range of values.
 pub trait Value: DisplayDepth + Clone {
     /// Left subtype
     type A: Value;
@@ -17,8 +17,9 @@ pub trait Value: DisplayDepth + Clone {
     /// Access the inner values of a product value.
     fn as_product(&self) -> Result<(&Self::A, &Self::B), Error>;
 
-    /// Return a product value of `a` and `b` if the type is a product type.
-    fn wrap_product(a: Self::A, b: Self::B) -> Result<Self, Error>;
+    /// Create a product value of `a` and `b`.
+    /// Fails on non-product types.
+    fn product(a: Self::A, b: Self::B) -> Result<Self, Error>;
 }
 
 /// Atomic unit type.
@@ -69,7 +70,7 @@ impl Value for Unit {
         Err(Error::SplitProduct)
     }
 
-    fn wrap_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
+    fn product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
         Err(Error::JoinProduct)
     }
 }
@@ -96,7 +97,7 @@ impl<A: Value, B: Value> Value for Sum<A, B> {
         Err(Error::SplitProduct)
     }
 
-    fn wrap_product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
+    fn product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
         Err(Error::JoinProduct)
     }
 }
@@ -119,7 +120,7 @@ impl<A: Value, B: Value> Value for Product<A, B> {
         }
     }
 
-    fn wrap_product(a: Self::A, b: Self::B) -> Result<Self, Error> {
+    fn product(a: Self::A, b: Self::B) -> Result<Self, Error> {
         Ok(Product::Product(a, b))
     }
 }
