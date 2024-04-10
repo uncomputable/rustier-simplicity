@@ -4,7 +4,7 @@ use simplicity_playground::value::*;
 fn main() {
     // Unit Constant
 
-    let unit_program = unit::<Bit>();
+    let unit_program = only::<Bit>();
     println!("Unit program:\n{}\n", unit_program);
 
     for bit in [false, true] {

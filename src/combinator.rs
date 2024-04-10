@@ -1,7 +1,6 @@
 use crate::display::DisplayDepth;
 use crate::error::Error;
-use crate::value;
-use crate::value::Value;
+use crate::value::*;
 use std::marker::PhantomData;
 
 /// Generic combinator.
@@ -19,8 +18,10 @@ pub trait Combinator: DisplayDepth {
 /// Atomic unit combinator.
 ///
 /// Takes any input and returns the unit value.
+///
+/// The struct has the name `GetUnit` to distinguish it from the [`Unit`] type.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Unit<A: Value> {
+pub struct Only<A: Value> {
     _i: PhantomData<A>,
 }
 
@@ -134,7 +135,7 @@ pub struct Case<S: Combinator, T: Combinator> {
     pub(crate) right: T,
 }
 
-impl<A> Combinator for Unit<A>
+impl<A> Combinator for Only<A>
 where
     // Any input type
     A: Value,
@@ -142,11 +143,11 @@ where
     // Input type is anything
     type In = A;
     // Output type is always unit type
-    type Out = value::Unit;
+    type Out = Unit;
 
     fn exec(&self, _value: Self::In) -> Result<Self::Out, Error> {
         // Always return unit value
-        Ok(value::Unit::Unit)
+        Ok(Unit::Unit)
     }
 }
 
@@ -176,7 +177,7 @@ where
     // Input type is product type of:
     // 1) Input type of inner combinator, and
     // 2) Something which will be ignored (`B`)
-    type In = value::Product<T::In, B>;
+    type In = Product<T::In, B>;
     // Output type is output type of inner combinator
     type Out = T::Out;
 
@@ -200,7 +201,7 @@ where
     // Input type is product type of:
     // 1) Something which will be ignored (`A`), and
     // 2) Input type of inner combinator
-    type In = value::Product<A, T::In>;
+    type In = Product<A, T::In>;
     // Output type is output type of inner combinator
     type Out = T::Out;
 
@@ -226,13 +227,13 @@ where
     // Output type is sum type of:
     // 1) Output type of inner combinator, and
     // 2) Something which was added (`C`)
-    type Out = value::Sum<T::Out, C>;
+    type Out = Sum<T::Out, C>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute inner combinator on input value
         let c = self.inner.exec(value)?;
         // Wrap output of inner combinator in left value
-        Ok(value::Sum::Left(c))
+        Ok(Sum::Left(c))
     }
 }
 
@@ -248,13 +249,13 @@ where
     // Output type is sum type of:
     // 1) Something which was added (`B`), and
     // 2) Output type of inner combinator
-    type Out = value::Sum<B, T::Out>;
+    type Out = Sum<B, T::Out>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute inner combinator on input value
         let c = self.inner.exec(value)?;
         // Wrap output of inner combinator in right value
-        Ok(value::Sum::Right(c))
+        Ok(Sum::Right(c))
     }
 }
 
@@ -271,7 +272,7 @@ where
     // Output type is product type of
     // 1) Output type of left inner combinator, and
     // 2) Output type of right inner combinator
-    type Out = value::Product<S::Out, T::Out>;
+    type Out = Product<S::Out, T::Out>;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute left inner combinator on input value
@@ -279,7 +280,7 @@ where
         // Execute right inner combinator on (same) input value
         let c = self.right.exec(value)?;
         // Return product value of output of both inner combinators
-        Ok(value::Product::Product(b, c))
+        Ok(Product::Product(b, c))
     }
 }
 
@@ -327,7 +328,7 @@ where
     //    b) Left subtype of input type of right inner combinator
     // 2) Right subtype of input type of left inner combinator
     //    (Equals right subtype of input type of right inner combinator)
-    type In = value::Product<value::Sum<AC::A, BC::A>, AC::B>;
+    type In = Product<Sum<AC::A, BC::A>, AC::B>;
     // Output type is output type of left inner combinator
     // (Equals output type of right inner combinator)
     type Out = S::Out;
@@ -360,8 +361,8 @@ where
 }
 
 /// `unit : A → 1`
-pub fn unit<A: Value>() -> Unit<A> {
-    Unit { _i: PhantomData }
+pub fn only<A: Value>() -> Only<A> {
+    Only { _i: PhantomData }
 }
 
 /// `iden : A → A`
@@ -417,25 +418,24 @@ pub fn case<S: Combinator, T: Combinator>(s: S, t: T) -> Case<S, T> {
 }
 
 #[allow(type_alias_bounds)]
-pub type False<A: Value> = Injl<Unit<A>, value::Unit>;
+pub type False<A: Value> = Injl<Only<A>, Unit>;
 #[allow(type_alias_bounds)]
-pub type True<A: Value> = Injr<value::Unit, Unit<A>>;
+pub type True<A: Value> = Injr<Unit, Only<A>>;
 
 /// `false : A → 2`
 pub fn bit_false<A: Value>() -> False<A> {
-    injl(unit())
+    injl(only())
 }
 
 /// `true : A → 2`
 pub fn bit_true<A: Value>() -> True<A> {
-    injr(unit())
+    injr(only())
 }
 
 #[allow(type_alias_bounds)]
-pub type Cond<S: Combinator, T: Combinator> = Case<Drop<value::Unit, T>, Drop<value::Unit, S>>;
+pub type Cond<S: Combinator, T: Combinator> = Case<Drop<Unit, T>, Drop<Unit, S>>;
 #[allow(type_alias_bounds)]
-pub type Not<T: Combinator> =
-    Comp<Pair<T, Unit<T::In>>, Cond<False<value::Unit>, True<value::Unit>>>;
+pub type Not<T: Combinator> = Comp<Pair<T, Only<T::In>>, Cond<False<Unit>, True<Unit>>>;
 
 /// `cond : 2 × A → B where s : A → B and t : A → B`
 pub fn cond<S: Combinator, T: Combinator>(s: S, t: T) -> Cond<S, T> {
@@ -444,18 +444,13 @@ pub fn cond<S: Combinator, T: Combinator>(s: S, t: T) -> Cond<S, T> {
 
 /// `not : A → 2 where t : A → 2`
 pub fn not<T: Combinator>(t: T) -> Not<T> {
-    comp(pair(t, unit()), cond(bit_false(), bit_true()))
+    comp(pair(t, only()), cond(bit_false(), bit_true()))
 }
 
-pub type Maj1 =
-    Cond<Cond<True<value::Bit>, Iden<value::Bit>>, Cond<Iden<value::Bit>, False<value::Bit>>>;
-pub type Xor3 = Cond<
-    Cond<Iden<value::Bit>, Not<Iden<value::Bit>>>,
-    Cond<Not<Iden<value::Bit>>, Iden<value::Bit>>,
->;
+pub type Maj1 = Cond<Cond<True<Bit>, Iden<Bit>>, Cond<Iden<Bit>, False<Bit>>>;
+pub type Xor3 = Cond<Cond<Iden<Bit>, Not<Iden<Bit>>>, Cond<Not<Iden<Bit>>, Iden<Bit>>>;
 pub type FullAdd1 = Pair<Maj1, Xor3>;
-pub type HalfAdd1 =
-    Cond<Pair<Iden<value::Bit>, Not<Iden<value::Bit>>>, Pair<False<value::Bit>, Iden<value::Bit>>>;
+pub type HalfAdd1 = Cond<Pair<Iden<Bit>, Not<Iden<Bit>>>, Pair<False<Bit>, Iden<Bit>>>;
 
 /// `maj : 2 × (2 × 2) → 2`
 pub fn maj() -> Maj1 {
@@ -510,38 +505,27 @@ macro_rules! full_add_2n {
     $full_add_n: ident, $full_add_2n: ident,
     $FullAddn: ident, $FullAdd2n: ident,
     $FullAdd2nPart1a: ident, $FullAdd2nPart1b: ident, $FullAdd2nPart1: ident, $FullAdd2nPart2: ident, $FullAdd2nPart3: ident) => {
-        type $FullAdd2nPart1a = Drop<
-            value::Bit,
-            Pair<O<O<H<$Wordn>, $Wordn>, $Word2n>, I<$Word2n, O<H<$Wordn>, $Wordn>>>,
-        >;
+        type $FullAdd2nPart1a =
+            Drop<Bit, Pair<O<O<H<$Wordn>, $Wordn>, $Word2n>, I<$Word2n, O<H<$Wordn>, $Wordn>>>>;
 
         type $FullAdd2nPart1b = Pair<
-            O<H<value::Bit>, $Word4n>,
-            Drop<
-                value::Bit,
-                Pair<O<I<$Wordn, H<$Wordn>>, $Word2n>, I<$Word2n, I<$Wordn, H<$Wordn>>>>,
-            >,
+            O<H<Bit>, $Word4n>,
+            Drop<Bit, Pair<O<I<$Wordn, H<$Wordn>>, $Word2n>, I<$Word2n, I<$Wordn, H<$Wordn>>>>>,
         >;
 
         type $FullAdd2nPart1 = Pair<$FullAdd2nPart1a, Comp<$FullAdd2nPart1b, $FullAddn>>;
 
         type $FullAdd2nPart2 = Pair<
-            I<$Word2n, I<value::Bit, H<$Wordn>>>,
+            I<$Word2n, I<Bit, H<$Wordn>>>,
             Comp<
-                Pair<
-                    I<$Word2n, O<H<value::Bit>, $Wordn>>,
-                    O<H<$Word2n>, value::Product<value::Bit, $Wordn>>,
-                >,
+                Pair<I<$Word2n, O<H<Bit>, $Wordn>>, O<H<$Word2n>, Product<Bit, $Wordn>>>,
                 $FullAddn,
             >,
         >;
 
         type $FullAdd2nPart3 = Pair<
-            I<$Wordn, O<H<value::Bit>, $Wordn>>,
-            Pair<
-                I<$Wordn, I<value::Bit, H<$Wordn>>>,
-                O<H<$Wordn>, value::Product<value::Bit, $Wordn>>,
-            >,
+            I<$Wordn, O<H<Bit>, $Wordn>>,
+            Pair<I<$Wordn, I<Bit, H<$Wordn>>>, O<H<$Wordn>, Product<Bit, $Wordn>>>,
         >;
 
         type $FullAdd2n = Comp<$FullAdd2nPart1, Comp<$FullAdd2nPart2, $FullAdd2nPart3>>;
@@ -585,9 +569,9 @@ macro_rules! full_add_2n {
 }
 
 full_add_2n!(
-    value::Word1,
-    value::Word2,
-    value::Word4,
+    Word1,
+    Word2,
+    Word4,
     full_add_1,
     full_add_2,
     FullAdd1,
@@ -600,9 +584,9 @@ full_add_2n!(
 );
 
 full_add_2n!(
-    value::Word2,
-    value::Word4,
-    value::Word8,
+    Word2,
+    Word4,
+    Word8,
     full_add_2,
     full_add_4,
     FullAdd2,
@@ -615,9 +599,9 @@ full_add_2n!(
 );
 
 full_add_2n!(
-    value::Word4,
-    value::Word8,
-    value::Word16,
+    Word4,
+    Word8,
+    Word16,
     full_add_4,
     full_add_8,
     FullAdd4,
@@ -630,9 +614,9 @@ full_add_2n!(
 );
 
 full_add_2n!(
-    value::Word8,
-    value::Word16,
-    value::Word32,
+    Word8,
+    Word16,
+    Word32,
     full_add_8,
     full_add_16,
     FullAdd8,
@@ -645,9 +629,9 @@ full_add_2n!(
 );
 
 full_add_2n!(
-    value::Word16,
-    value::Word32,
-    value::Word64,
+    Word16,
+    Word32,
+    Word64,
     full_add_16,
     full_add_32,
     FullAdd16,
@@ -660,9 +644,9 @@ full_add_2n!(
 );
 
 full_add_2n!(
-    value::Word32,
-    value::Word64,
-    value::Word128,
+    Word32,
+    Word64,
+    Word128,
     full_add_32,
     full_add_64,
     FullAdd32,

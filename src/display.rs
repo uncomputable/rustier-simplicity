@@ -1,7 +1,5 @@
-use crate::combinator;
-use crate::combinator::Combinator;
-use crate::value;
-use crate::value::Value;
+use crate::combinator::*;
+use crate::value::*;
 use std::fmt;
 
 const INDENT_FACTOR: usize = 2;
@@ -73,8 +71,8 @@ macro_rules! impl_display_leaf {
     };
 }
 
-// Doesn't work for value::Sum because of different structure
-// TODO: Change structure for value::Sum
+// Doesn't work for Sum because of different structure
+// TODO: Change structure for Sum
 macro_rules! impl_display_single {
     ($structure:path, $name:expr) => {
         impl<A: Combinator, I: Value> DisplayDepth for $structure {
@@ -91,7 +89,7 @@ macro_rules! impl_display_single {
     };
 }
 
-// Doesn't work for value::Product because of `&self.left` and `&self.right`
+// Doesn't work for Product because of `&self.left` and `&self.right`
 // TODO: Add macros that add getters?
 macro_rules! impl_display_double {
     ($structure:path, $name:expr) => {
@@ -109,61 +107,61 @@ macro_rules! impl_display_double {
     };
 }
 
-impl DisplayDepth for value::Unit {
+impl DisplayDepth for Unit {
     fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
         fmt_depth_leaf("●", depth, f)
     }
 }
 
-impl fmt::Display for value::Unit {
+impl fmt::Display for Unit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.fmt_depth(0, f)
     }
 }
 
-impl<A: value::Value, B: value::Value> DisplayDepth for value::Sum<A, B> {
+impl<A: Value, B: Value> DisplayDepth for Sum<A, B> {
     fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            value::Sum::Left(a) => fmt_depth_single("L", depth, f, a),
-            value::Sum::Right(b) => fmt_depth_single("R", depth, f, b),
+            Sum::Left(a) => fmt_depth_single("L", depth, f, a),
+            Sum::Right(b) => fmt_depth_single("R", depth, f, b),
         }
     }
 }
 
-impl<A: value::Value, B: value::Value> fmt::Display for value::Sum<A, B> {
+impl<A: Value, B: Value> fmt::Display for Sum<A, B> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.fmt_depth(0, f)
     }
 }
 
-impl<A: value::Value, B: value::Value> DisplayDepth for value::Product<A, B> {
+impl<A: Value, B: Value> DisplayDepth for Product<A, B> {
     fn fmt_depth(&self, depth: usize, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            value::Product::Product(a, b) => fmt_depth_double("", depth, f, a, b),
+            Product::Product(a, b) => fmt_depth_double("", depth, f, a, b),
         }
     }
 }
 
-impl<A: value::Value, B: value::Value> fmt::Display for value::Product<A, B> {
+impl<A: Value, B: Value> fmt::Display for Product<A, B> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.fmt_depth(0, f)
     }
 }
 
-impl_display_leaf!(combinator::Unit<I>, "unit");
+impl_display_leaf!(Only<I>, "only");
 
-impl_display_leaf!(combinator::Iden<I>, "iden");
+impl_display_leaf!(Iden<I>, "iden");
 
-impl_display_single!(combinator::Take<A, I>, "take");
+impl_display_single!(Take<A, I>, "take");
 
-impl_display_single!(combinator::Drop<I, A>, "drop");
+impl_display_single!(Drop<I, A>, "drop");
 
-impl_display_single!(combinator::Injl<A, I>, "injl");
+impl_display_single!(Injl<A, I>, "injl");
 
-impl_display_single!(combinator::Injr<I, A>, "injr");
+impl_display_single!(Injr<I, A>, "injr");
 
-impl_display_double!(combinator::Pair<A, B>, "pair");
+impl_display_double!(Pair<A, B>, "pair");
 
-impl_display_double!(combinator::Comp<A, B>, "comp");
+impl_display_double!(Comp<A, B>, "comp");
 
-impl_display_double!(combinator::Case<A, B>, "case");
+impl_display_double!(Case<A, B>, "case");
