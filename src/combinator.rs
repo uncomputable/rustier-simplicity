@@ -495,10 +495,20 @@ pub fn i<A, T>(t: T) -> I<A, T> {
 }
 
 macro_rules! full_add_2n {
-    ($Wordn: path, $Word2n: path, $Word4n: path,
-    $full_add_n: ident, $full_add_2n: ident,
-    $FullAddn: ident, $FullAdd2n: ident,
-    $FullAdd2nPart1a: ident, $FullAdd2nPart1b: ident, $FullAdd2nPart1: ident, $FullAdd2nPart2: ident, $FullAdd2nPart3: ident) => {
+    (
+        $Wordn: path,
+        $Word2n: path,
+        $Word4n: path,
+        $full_add_n: ident,
+        $full_add_2n: ident,
+        $FullAddn: ident,
+        $FullAdd2n: ident,
+        $FullAdd2nPart1a: ident,
+        $FullAdd2nPart1b: ident,
+        $FullAdd2nPart1: ident,
+        $FullAdd2nPart2: ident,
+        $FullAdd2nPart3: ident,
+    ) => {
         type $FullAdd2nPart1a =
             Drop<Bit, Pair<O<O<H<$Wordn>, $Wordn>, $Word2n>, I<$Word2n, O<H<$Wordn>, $Wordn>>>>;
 
@@ -574,7 +584,7 @@ full_add_2n!(
     FullAdd2Part1b,
     FullAdd2Part1,
     FullAdd2Part2,
-    FullAdd2Part3
+    FullAdd2Part3,
 );
 
 full_add_2n!(
@@ -589,7 +599,7 @@ full_add_2n!(
     FullAdd4Part1b,
     FullAdd4Part1,
     FullAdd4Part2,
-    FullAdd4Part3
+    FullAdd4Part3,
 );
 
 full_add_2n!(
@@ -604,7 +614,7 @@ full_add_2n!(
     FullAdd8Part1b,
     FullAdd8Part1,
     FullAdd8Part2,
-    FullAdd8Part3
+    FullAdd8Part3,
 );
 
 full_add_2n!(
@@ -619,7 +629,7 @@ full_add_2n!(
     FullAdd16Part1b,
     FullAdd16Part1,
     FullAdd16Part2,
-    FullAdd16Part3
+    FullAdd16Part3,
 );
 
 full_add_2n!(
@@ -634,7 +644,7 @@ full_add_2n!(
     FullAdd32Part1b,
     FullAdd32Part1,
     FullAdd32Part2,
-    FullAdd32Part3
+    FullAdd32Part3,
 );
 
 full_add_2n!(
@@ -649,5 +659,5 @@ full_add_2n!(
     FullAdd64Part1b,
     FullAdd64Part1,
     FullAdd64Part2,
-    FullAdd64Part3
+    FullAdd64Part3,
 );
