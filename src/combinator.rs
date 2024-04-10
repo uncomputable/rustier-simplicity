@@ -21,7 +21,7 @@ pub trait Combinator: DisplayDepth {
 ///
 /// The struct has the name `GetUnit` to distinguish it from the [`Unit`] type.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Only<A: Value> {
+pub struct Only<A> {
     _i: PhantomData<A>,
 }
 
@@ -29,7 +29,7 @@ pub struct Only<A: Value> {
 ///
 /// Takes any input and returns it back.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Iden<A: Value> {
+pub struct Iden<A> {
     _i: PhantomData<A>,
 }
 
@@ -41,7 +41,7 @@ pub struct Iden<A: Value> {
 /// passes the left value `a` of type `A` to the inner combinator,
 /// and returns a value `c` of type `C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Take<T: Combinator, B: Value> {
+pub struct Take<T, B> {
     pub(crate) inner: T,
     _i: PhantomData<B>,
 }
@@ -54,7 +54,7 @@ pub struct Take<T: Combinator, B: Value> {
 /// passes the right value `b` of type `B` to the inner combinator,
 /// and returns a value `c` of type `C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Drop<A: Value, T: Combinator> {
+pub struct Drop<A, T> {
     pub(crate) inner: T,
     _i: PhantomData<A>,
 }
@@ -67,7 +67,7 @@ pub struct Drop<A: Value, T: Combinator> {
 /// passes the value `a` to the inner combinator to obtain a value `b` of type `B`,
 /// and returns the value `L(b)` of type `B + C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Injl<T: Combinator, C: Value> {
+pub struct Injl<T, C> {
     pub(crate) inner: T,
     _i: PhantomData<C>,
 }
@@ -80,7 +80,7 @@ pub struct Injl<T: Combinator, C: Value> {
 /// passes the value `a` to the inner combinator to obtain a value `c` of type `C`,
 /// and returns the value `R(c)` of type `B + C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Injr<B: Value, T: Combinator> {
+pub struct Injr<B, T> {
     pub(crate) inner: T,
     _i: PhantomData<B>,
 }
@@ -95,7 +95,7 @@ pub struct Injr<B: Value, T: Combinator> {
 /// passes the value `a` to the right combinator to obtain a value `c` of type `C`,
 /// and returns the value `(b, c)` of type `B × C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Pair<S: Combinator, T: Combinator> {
+pub struct Pair<S, T> {
     pub(crate) left: S,
     pub(crate) right: T,
 }
@@ -110,7 +110,7 @@ pub struct Pair<S: Combinator, T: Combinator> {
 /// passes the value `b` to the the right combinator to obtain a value `c` of type `C`,
 /// and returns `c`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Comp<S: Combinator, T: Combinator> {
+pub struct Comp<S, T> {
     pub(crate) left: S,
     pub(crate) right: T,
 }
@@ -130,7 +130,7 @@ pub struct Comp<S: Combinator, T: Combinator> {
 /// then it passes the value `(b, c)` to the right combinator to obtain a value `d` of type `D`
 /// and returns `d`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Case<S: Combinator, T: Combinator> {
+pub struct Case<S, T> {
     pub(crate) left: S,
     pub(crate) right: T,
 }
@@ -361,17 +361,17 @@ where
 }
 
 /// `unit : A → 1`
-pub fn only<A: Value>() -> Only<A> {
+pub fn only<A>() -> Only<A> {
     Only { _i: PhantomData }
 }
 
 /// `iden : A → A`
-pub fn iden<A: Value>() -> Iden<A> {
+pub fn iden<A>() -> Iden<A> {
     Iden { _i: PhantomData }
 }
 
 /// `take t : A × B → C where t : A → C`
-pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
+pub fn take<T, B>(t: T) -> Take<T, B> {
     Take {
         inner: t,
         _i: PhantomData,
@@ -379,7 +379,7 @@ pub fn take<T: Combinator, B: Value>(t: T) -> Take<T, B> {
 }
 
 /// `drop t : A × B → C where t : B → C`
-pub fn _drop<A: Value, T: Combinator>(t: T) -> Drop<A, T> {
+pub fn _drop<A, T>(t: T) -> Drop<A, T> {
     Drop {
         inner: t,
         _i: PhantomData,
@@ -387,7 +387,7 @@ pub fn _drop<A: Value, T: Combinator>(t: T) -> Drop<A, T> {
 }
 
 /// `injl t : A → B + C where t : A → B`
-pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
+pub fn injl<T, C>(t: T) -> Injl<T, C> {
     Injl {
         inner: t,
         _i: PhantomData,
@@ -395,7 +395,7 @@ pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
 }
 
 /// `injr t : A → B + C where t : A → C`
-pub fn injr<B: Value, T: Combinator>(t: T) -> Injr<B, T> {
+pub fn injr<B, T>(t: T) -> Injr<B, T> {
     Injr {
         inner: t,
         _i: PhantomData,
@@ -403,42 +403,39 @@ pub fn injr<B: Value, T: Combinator>(t: T) -> Injr<B, T> {
 }
 
 /// `pair s t : A → B × C where s : A → B and t : A → C`
-pub fn pair<S: Combinator, T: Combinator>(s: S, t: T) -> Pair<S, T> {
+pub fn pair<S, T>(s: S, t: T) -> Pair<S, T> {
     Pair { left: s, right: t }
 }
 
 /// `comp s t : A → C where s : A → B and t : B → C`
-pub fn comp<S: Combinator, T: Combinator>(s: S, t: T) -> Comp<S, T> {
+pub fn comp<S, T>(s: S, t: T) -> Comp<S, T> {
     Comp { left: s, right: t }
 }
 
 /// `case s t : (A + B) × C → D where s : A × C → D and t : B × C → D`
-pub fn case<S: Combinator, T: Combinator>(s: S, t: T) -> Case<S, T> {
+pub fn case<S, T>(s: S, t: T) -> Case<S, T> {
     Case { left: s, right: t }
 }
 
-#[allow(type_alias_bounds)]
-pub type False<A: Value> = Injl<Only<A>, Unit>;
-#[allow(type_alias_bounds)]
-pub type True<A: Value> = Injr<Unit, Only<A>>;
+pub type False<A> = Injl<Only<A>, Unit>;
+pub type True<A> = Injr<Unit, Only<A>>;
 
 /// `false : A → 2`
-pub fn bit_false<A: Value>() -> False<A> {
+pub fn bit_false<A>() -> False<A> {
     injl(only())
 }
 
 /// `true : A → 2`
-pub fn bit_true<A: Value>() -> True<A> {
+pub fn bit_true<A>() -> True<A> {
     injr(only())
 }
 
-#[allow(type_alias_bounds)]
-pub type Cond<S: Combinator, T: Combinator> = Case<Drop<Unit, T>, Drop<Unit, S>>;
+pub type Cond<S, T> = Case<Drop<Unit, T>, Drop<Unit, S>>;
 #[allow(type_alias_bounds)]
 pub type Not<T: Combinator> = Comp<Pair<T, Only<T::In>>, Cond<False<Unit>, True<Unit>>>;
 
 /// `cond : 2 × A → B where s : A → B and t : A → B`
-pub fn cond<S: Combinator, T: Combinator>(s: S, t: T) -> Cond<S, T> {
+pub fn cond<S, T>(s: S, t: T) -> Cond<S, T> {
     case(_drop(t), _drop(s))
 }
 
@@ -472,31 +469,28 @@ pub fn half_add_1() -> HalfAdd1 {
     cond(pair(iden(), not(iden())), pair(bit_false(), iden()))
 }
 
-#[allow(type_alias_bounds)]
-pub type H<A: Value> = Iden<A>;
-#[allow(type_alias_bounds)]
-pub type O<T: Combinator, B: Value> = Take<T, B>;
-#[allow(type_alias_bounds)]
-pub type I<A: Value, T: Combinator> = Drop<A, T>;
+pub type H<A> = Iden<A>;
+pub type O<T, B> = Take<T, B>;
+pub type I<A, T> = Drop<A, T>;
 
 /// `h : A → A`
 ///
 /// Same as `iden`
-pub fn h<A: Value>() -> H<A> {
+pub fn h<A>() -> H<A> {
     iden()
 }
 
 /// `o t : A × B → C where t : A → C`
 ///
 /// Same as `take t`
-pub fn o<T: Combinator, B: Value>(t: T) -> O<T, B> {
+pub fn o<T, B>(t: T) -> O<T, B> {
     take(t)
 }
 
 /// `i t : A × B → C where t : B → C`
 ///
 /// Same as `drop t`
-pub fn i<A: Value, T: Combinator>(t: T) -> I<A, T> {
+pub fn i<A, T>(t: T) -> I<A, T> {
     _drop(t)
 }
 

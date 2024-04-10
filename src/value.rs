@@ -37,7 +37,7 @@ pub enum Unit {
 /// Either a `Left` value wraps an inner value of type `A`,
 /// or a `Right` value wraps an inner value of type `B`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Sum<A: Value, B: Value> {
+pub enum Sum<A, B> {
     /// Left value
     Left(A),
     /// Right value
@@ -49,7 +49,7 @@ pub enum Sum<A: Value, B: Value> {
 /// The `Product` value wraps both a left inner value of type `A`
 /// and a right inner value of type `B`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Product<A: Value, B: Value> {
+pub enum Product<A, B> {
     /// Product value
     Product(A, B),
 }
