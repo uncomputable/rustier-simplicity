@@ -1,8 +1,8 @@
 [package]
-name = "simplicity-playground"
+name = "rustier-simplicity"
 version = "0.1.0"
 edition = "2021"
-description = "Playground for getting familiar with the Simplicity language"
+description = "Implementation of Simplicity using Rust's type system"
 authors = ["Christian Lewe"]
 
 [dependencies]

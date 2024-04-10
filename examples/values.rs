@@ -1,4 +1,4 @@
-use simplicity_playground::value::*;
+use rustier_simplicity::value::*;
 
 fn main() {
     // Unit value

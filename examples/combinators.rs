@@ -1,5 +1,5 @@
-use simplicity_playground::combinator::*;
-use simplicity_playground::value::*;
+use rustier_simplicity::combinator::*;
+use rustier_simplicity::value::*;
 
 fn main() {
     // Unit Constant
