@@ -79,7 +79,7 @@ pub struct Injl<T: Combinator, C: Value> {
 /// passes the value `a` to the inner combinator to obtain a value `c` of type `C`,
 /// and returns the value `R(c)` of type `B + C`.
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct Injr<T: Combinator, B: Value> {
+pub struct Injr<B: Value, T: Combinator> {
     pub(crate) inner: T,
     _i: PhantomData<B>,
 }
@@ -236,7 +236,7 @@ where
     }
 }
 
-impl<T, B> Combinator for Injr<T, B>
+impl<B, T> Combinator for Injr<B, T>
 where
     // Any inner combinator
     T: Combinator,
@@ -394,7 +394,7 @@ pub fn injl<T: Combinator, C: Value>(t: T) -> Injl<T, C> {
 }
 
 /// `injr t : A → B + C where t : A → C`
-pub fn injr<T: Combinator, B: Value>(t: T) -> Injr<T, B> {
+pub fn injr<B: Value, T: Combinator>(t: T) -> Injr<B, T> {
     Injr {
         inner: t,
         _i: PhantomData,
@@ -419,7 +419,7 @@ pub fn case<S: Combinator, T: Combinator>(s: S, t: T) -> Case<S, T> {
 #[allow(type_alias_bounds)]
 pub type False<A: Value> = Injl<Unit<A>, value::Unit>;
 #[allow(type_alias_bounds)]
-pub type True<A: Value> = Injr<Unit<A>, value::Unit>;
+pub type True<A: Value> = Injr<value::Unit, Unit<A>>;
 
 /// `false : A → 2`
 pub fn bit_false<A: Value>() -> False<A> {

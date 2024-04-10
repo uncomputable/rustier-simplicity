@@ -160,7 +160,7 @@ impl_display_single!(combinator::Drop<I, A>, "drop");
 
 impl_display_single!(combinator::Injl<A, I>, "injl");
 
-impl_display_single!(combinator::Injr<A, I>, "injr");
+impl_display_single!(combinator::Injr<I, A>, "injr");
 
 impl_display_double!(combinator::Pair<A, B>, "pair");
 
