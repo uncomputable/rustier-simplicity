@@ -182,7 +182,7 @@ where
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get left inner value of product value (ignore the right inner value)
-        let (a, _) = value.unwrap_product()?;
+        let (a, _) = value.as_product()?;
         // Execute inner combinator on left inner value
         let c = self.inner.exec(a.clone())?;
         // Return output of inner combinator
@@ -206,7 +206,7 @@ where
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get right inner value of product value (ignore the left inner value)
-        let (_, b) = value.unwrap_product()?;
+        let (_, b) = value.as_product()?;
         // Execute inner combinator on right inner value
         let c = self.inner.exec(b.clone())?;
         // Return output of inner combinator
@@ -334,9 +334,9 @@ where
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get left and right inner value of input value
-        let (ab, c) = value.unwrap_product()?;
+        let (ab, c) = value.as_product()?;
         // Get inner value if `ab` is a left value
-        if let Ok(a) = ab.unwrap_left() {
+        if let Ok(a) = ab.as_left() {
             // Construct input value for left inner combinator
             let ac = AC::wrap_product(a.clone(), c.clone())?;
             // Execute left inner combinator on input value
@@ -344,7 +344,7 @@ where
             // Return output value of left inner combinator
             Ok(d)
         // Get inner value if `ab` is a right value
-        } else if let Ok(b) = ab.unwrap_right() {
+        } else if let Ok(b) = ab.as_right() {
             // Construct input value for right inner combinator
             let bc = BC::wrap_product(b.clone(), c.clone())?;
             // Execute right inner combinator on input value
