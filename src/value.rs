@@ -130,13 +130,23 @@ impl<A: Value, B: Value> Value for Product<A, B> {
 /// Bits are sums of unit.
 pub type Bit = Sum<Unit, Unit>;
 
-/// Convert a bit to a value.
-pub fn from_bit(bit: bool) -> Bit {
-    match bit {
-        // False bit becomes left value that wraps unit value
-        false => Sum::Left(Unit::Unit),
-        // True bit becomes right value that wraps unit value
-        true => Sum::Right(Unit::Unit),
+impl From<bool> for Bit {
+    fn from(bit: bool) -> Self {
+        match bit {
+            // False bit becomes left value that wraps unit value
+            false => Sum::Left(Unit::Unit),
+            // True bit becomes right value that wraps unit value
+            true => Sum::Right(Unit::Unit),
+        }
+    }
+}
+
+impl From<Bit> for bool {
+    fn from(bit: Bit) -> Self {
+        match bit {
+            Bit::Left(_) => false,
+            Bit::Right(_) => true,
+        }
     }
 }
 
@@ -147,29 +157,6 @@ pub type Byte = Product<
     Product<Product<Bit, Bit>, Product<Bit, Bit>>,
     Product<Product<Bit, Bit>, Product<Bit, Bit>>,
 >;
-
-/// Convert a byte to a value.
-pub fn from_byte(n: u8) -> Byte {
-    let first_bit = from_bit(n & 128 != 0);
-    let second_bit = from_bit(n & 64 != 0);
-    let third_bit = from_bit(n & 32 != 0);
-    let forth_bit = from_bit(n & 16 != 0);
-    let fifth_bit = from_bit(n & 8 != 0);
-    let sixth_bit = from_bit(n & 4 != 0);
-    let seventh_bit = from_bit(n & 2 != 0);
-    let eighth_bit = from_bit(n & 1 != 0);
-
-    Product::Product(
-        Product::Product(
-            Product::Product(first_bit, second_bit),
-            Product::Product(third_bit, forth_bit),
-        ),
-        Product::Product(
-            Product::Product(fifth_bit, sixth_bit),
-            Product::Product(seventh_bit, eighth_bit),
-        ),
-    )
-}
 
 /// 1-bit word type.
 pub type Word1 = Bit;
@@ -190,152 +177,179 @@ pub type Word128 = Product<Word64, Word64>;
 /// 256-bit word type.
 pub type Word258 = Product<Word128, Word128>;
 
-/// Convert 1 bit into a 1-bit word value.
-pub fn from_u1(n: u8) -> Word1 {
-    match n {
-        0 => Sum::Left(Unit::Unit),
-        1 => Sum::Right(Unit::Unit),
-        _ => panic!("{} out of range for u1", n),
-    }
-}
-
-/// Convert 2 bits into a 2-bit word value.
-pub fn from_u2(n: u8) -> Word2 {
-    if n > 3 {
-        panic!("{} out of range for u2", n)
-    }
-    let n1 = (n & 2) / 2;
-    let n2 = n & 1;
-    Product::Product(from_u1(n1), from_u1(n2))
-}
-
-/// Convert 4 bits into a 4-bit word value.
-pub fn from_u4(n: u8) -> Word4 {
-    if n > 15 {
-        panic!("{} out of range for u4", n)
-    }
-    let n1 = (n & 12) / 4;
-    let n2 = n & 3;
-    Product::Product(from_u2(n1), from_u2(n2))
-}
-
-/// Convert 8 bits into a 8-bit word value.
-pub fn from_u8(n: u8) -> Word8 {
-    let n1 = n >> 4;
-    let n2 = n & 0xf;
-    Product::Product(from_u4(n1), from_u4(n2))
-}
-
-/// Convert 16 bits into a 16-bit word value.
-pub fn from_u16(n: u16) -> Word16 {
-    let n1 = (n >> 8) as u8;
-    let n2 = (n & 0xff) as u8;
-    Product::Product(from_u8(n1), from_u8(n2))
-}
-
-/// Convert 32 bits into a 32-bit word value.
-pub fn from_u32(n: u32) -> Word32 {
-    let n1 = (n >> 16) as u16;
-    let n2 = (n & 0xffff) as u16;
-    Product::Product(from_u16(n1), from_u16(n2))
-}
-
-/// Convert 64 bits into a 64-bit word value.
-pub fn from_u64(n: u64) -> Word64 {
-    let n1 = (n >> 32) as u32;
-    let n2 = (n & 0xffff_ffff) as u32;
-    Product::Product(from_u32(n1), from_u32(n2))
-}
-
-/// Convert 128 bits into a 64-bit word value.
-pub fn from_u128(n: u128) -> Word128 {
-    let n1 = (n >> 64) as u64;
-    // Cast picks last bytes
-    let n2 = n as u64;
-    Product::Product(from_u64(n1), from_u64(n2))
-}
-
-/// Convert a 1-bit word into 1 bit.
-pub fn to_u1(n: Word1) -> u8 {
-    match n {
-        Word1::Left(_) => 0,
-        Word1::Right(_) => 1,
-    }
-}
-
-/// Convert a 2-bit word into 2 bits.
-pub fn to_u2(n: Word2) -> u8 {
-    match n {
-        Word2::Product(n1, n2) => {
-            let m1 = to_u1(n1);
-            let m2 = to_u1(n2);
-            (m1 << 1) + m2
+impl Word1 {
+    /// Convert an integer into a 1-bit word.
+    ///
+    /// ## Panics
+    ///
+    /// 1 < n
+    pub fn from_unwrap(n: u8) -> Word1 {
+        match n {
+            0 => Sum::Left(Unit::Unit),
+            1 => Sum::Right(Unit::Unit),
+            _ => panic!("{n} has more than 1 bits"),
         }
     }
 }
 
-/// Convert a 4-bit word into 4 bits.
-pub fn to_u4(n: Word4) -> u8 {
-    match n {
-        Word4::Product(n1, n2) => {
-            let m1 = to_u2(n1);
-            let m2 = to_u2(n2);
-            (m1 << 2) + m2
+impl Word2 {
+    /// Convert an integer into a 2-bit word.
+    ///
+    /// ## Panics
+    ///
+    /// 3 < n
+    pub fn from_unwrap(n: u8) -> Word2 {
+        if 3 < n {
+            panic!("{n} has more than 2 bits")
+        }
+        let n1 = (n & 2) / 2;
+        let n2 = n & 1;
+        Product::Product(Word1::from_unwrap(n1), Word1::from_unwrap(n2))
+    }
+}
+
+impl Word4 {
+    /// Convert an integer into a 4-bit word.
+    pub fn from_unwrap(n: u8) -> Word4 {
+        if 15 < n {
+            panic!("{n} has more than 4 bits")
+        }
+        let n1 = (n & 12) / 4;
+        let n2 = n & 3;
+        Product::Product(Word2::from_unwrap(n1), Word2::from_unwrap(n2))
+    }
+}
+
+impl From<u8> for Word8 {
+    fn from(n: u8) -> Self {
+        let n1 = n >> 4;
+        let n2 = n & 0xf;
+        Product::Product(Word4::from_unwrap(n1), Word4::from_unwrap(n2))
+    }
+}
+
+impl From<u16> for Word16 {
+    fn from(n: u16) -> Word16 {
+        let n1 = (n >> 8) as u8;
+        let n2 = (n & 0xff) as u8;
+        Product::Product(Word8::from(n1), Word8::from(n2))
+    }
+}
+
+impl From<u32> for Word32 {
+    fn from(n: u32) -> Word32 {
+        let n1 = (n >> 16) as u16;
+        let n2 = (n & 0xffff) as u16;
+        Product::Product(Word16::from(n1), Word16::from(n2))
+    }
+}
+
+impl From<u64> for Word64 {
+    fn from(n: u64) -> Self {
+        let n1 = (n >> 32) as u32;
+        let n2 = (n & 0xffff_ffff) as u32;
+        Product::Product(Word32::from(n1), Word32::from(n2))
+    }
+}
+
+impl From<u128> for Word128 {
+    fn from(n: u128) -> Self {
+        let n1 = (n >> 64) as u64;
+        // Cast picks last bytes
+        let n2 = n as u64;
+        Product::Product(Word64::from(n1), Word64::from(n2))
+    }
+}
+
+impl From<&Word1> for u8 {
+    fn from(n: &Word1) -> Self {
+        match n {
+            Word1::Left(_) => 0,
+            Word1::Right(_) => 1,
         }
     }
 }
 
-/// Convert a 8-bit word into 8 bits.
-pub fn to_u8(n: Word8) -> u8 {
-    match n {
-        Word8::Product(n1, n2) => {
-            let m1 = to_u4(n1);
-            let m2 = to_u4(n2);
-            (m1 << 4) + m2
+impl From<&Word2> for u8 {
+    fn from(n: &Word2) -> Self {
+        match n {
+            Word2::Product(n1, n2) => {
+                let m1 = u8::from(n1);
+                let m2 = u8::from(n2);
+                (m1 << 1) + m2
+            }
         }
     }
 }
 
-/// Convert a 16-bit word into 16 bits.
-pub fn to_u16(n: Word16) -> u16 {
-    match n {
-        Word16::Product(n1, n2) => {
-            let m1 = to_u8(n1) as u16;
-            let m2 = to_u8(n2) as u16;
-            (m1 << 8) + m2
+impl From<&Word4> for u8 {
+    fn from(n: &Word4) -> Self {
+        match n {
+            Word4::Product(n1, n2) => {
+                let m1 = u8::from(n1);
+                let m2 = u8::from(n2);
+                (m1 << 2) + m2
+            }
         }
     }
 }
 
-/// Convert a 32-bit word into 32 bits.
-pub fn to_u32(n: Word32) -> u32 {
-    match n {
-        Word32::Product(n1, n2) => {
-            let m1 = to_u16(n1) as u32;
-            let m2 = to_u16(n2) as u32;
-            (m1 << 16) + m2
+impl From<&Word8> for u8 {
+    fn from(n: &Word8) -> Self {
+        match n {
+            Word8::Product(n1, n2) => {
+                let m1 = u8::from(n1);
+                let m2 = u8::from(n2);
+                (m1 << 4) + m2
+            }
         }
     }
 }
 
-/// Convert a 64-bit word into 64 bits.
-pub fn to_u64(n: Word64) -> u64 {
-    match n {
-        Word64::Product(n1, n2) => {
-            let m1 = to_u32(n1) as u64;
-            let m2 = to_u32(n2) as u64;
-            (m1 << 32) + m2
+impl From<&Word16> for u16 {
+    fn from(n: &Word16) -> Self {
+        match n {
+            Word16::Product(n1, n2) => {
+                let m1 = u8::from(n1) as u16;
+                let m2 = u8::from(n2) as u16;
+                (m1 << 8) + m2
+            }
         }
     }
 }
 
-/// Convert a 128-bit word into 128 bits.
-pub fn to_u128(n: Word128) -> u128 {
-    match n {
-        Word128::Product(n1, n2) => {
-            let m1 = to_u64(n1) as u128;
-            let m2 = to_u64(n2) as u128;
-            (m1 << 64) + m2
+impl From<&Word32> for u32 {
+    fn from(n: &Word32) -> Self {
+        match n {
+            Word32::Product(n1, n2) => {
+                let m1 = u16::from(n1) as u32;
+                let m2 = u16::from(n2) as u32;
+                (m1 << 16) + m2
+            }
+        }
+    }
+}
+
+impl From<&Word64> for u64 {
+    fn from(n: &Word64) -> Self {
+        match n {
+            Word64::Product(n1, n2) => {
+                let m1 = u32::from(n1) as u64;
+                let m2 = u32::from(n2) as u64;
+                (m1 << 32) + m2
+            }
+        }
+    }
+}
+
+impl From<&Word128> for u128 {
+    fn from(n: &Word128) -> Self {
+        match n {
+            Word128::Product(n1, n2) => {
+                let m1 = u64::from(n1) as u128;
+                let m2 = u64::from(n2) as u128;
+                (m1 << 64) + m2
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-use simplicity_playground::value;
-use simplicity_playground::value::{Product, Sum, Unit};
+use simplicity_playground::value::*;
 
 fn main() {
     // Unit value
@@ -30,23 +29,23 @@ fn main() {
     println!("Product value:\n{}\n", unit_times_unit);
 
     // Bit values
-    let false_bit = value::from_bit(false);
+    let false_bit = Bit::from(false);
     println!("False bit value:\n{}\n", false_bit);
 
-    let true_bit = value::from_bit(true);
+    let true_bit = Bit::from(true);
     println!("True bit value:\n{}\n", true_bit);
 
     // Byte values
-    let byte = value::from_byte(12);
+    let byte = Word8::from(12);
     println!("Byte value:\n{}\n", byte);
 
     // Word values
-    let word = value::from_u64(1337);
+    let word = Word64::from(1337);
     println!("Word value:\n{}", word);
 
     for n in 0..10000 {
-        let value = value::from_u64(n);
-        let m = value::to_u64(value);
+        let value = Word64::from(n);
+        let m = u64::from(&value);
         assert_eq!(n, m);
     }
 }
