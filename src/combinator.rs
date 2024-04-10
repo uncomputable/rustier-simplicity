@@ -421,12 +421,12 @@ pub type False<A> = Injl<Only<A>, Unit>;
 pub type True<A> = Injr<Unit, Only<A>>;
 
 /// `false : A → 2`
-pub fn bit_false<A>() -> False<A> {
+pub fn _false<A>() -> False<A> {
     injl(only())
 }
 
 /// `true : A → 2`
-pub fn bit_true<A>() -> True<A> {
+pub fn _true<A>() -> True<A> {
     injr(only())
 }
 
@@ -441,7 +441,7 @@ pub fn cond<S, T>(s: S, t: T) -> Cond<S, T> {
 
 /// `not : A → 2 where t : A → 2`
 pub fn not<T: Combinator>(t: T) -> Not<T> {
-    comp(pair(t, only()), cond(bit_false(), bit_true()))
+    comp(pair(t, only()), cond(_false(), _true()))
 }
 
 pub type Maj1 = Cond<Cond<True<Bit>, Iden<Bit>>, Cond<Iden<Bit>, False<Bit>>>;
@@ -451,7 +451,7 @@ pub type HalfAdd1 = Cond<Pair<Iden<Bit>, Not<Iden<Bit>>>, Pair<False<Bit>, Iden<
 
 /// `maj : 2 × (2 × 2) → 2`
 pub fn maj() -> Maj1 {
-    cond(cond(bit_true(), iden()), cond(iden(), bit_false()))
+    cond(cond(_true(), iden()), cond(iden(), _false()))
 }
 
 /// `xor3 : 2 × (2 × 2) → 2`
@@ -466,7 +466,7 @@ pub fn full_add_1() -> FullAdd1 {
 
 /// `half_add1 : 2 × 2 → 2 × 2`
 pub fn half_add_1() -> HalfAdd1 {
-    cond(pair(iden(), not(iden())), pair(bit_false(), iden()))
+    cond(pair(iden(), not(iden())), pair(_false(), iden()))
 }
 
 pub type H<A> = Iden<A>;
@@ -677,7 +677,7 @@ macro_rules! add_n {
 
         /// add_n : 2^n × 2^n → 2 × 2^n
         pub fn $add_n() -> $Addn {
-            comp(pair(bit_false(), iden()), $full_add_n())
+            comp(pair(_false(), iden()), $full_add_n())
         }
 
         type $WrappingAddn = Comp<$Addn, Drop<Bit, Iden<$Wordn>>>;
