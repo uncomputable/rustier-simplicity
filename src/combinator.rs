@@ -326,54 +326,47 @@ where
     }
 }
 
-impl<S, T, AC, BC> Combinator for Case<S, T>
+impl<S, T, A, B, C> Combinator for Case<S, T>
 where
-    // Any left inner combinator
-    // whose input type is `AC`
-    S: Combinator<In = AC>,
-    // Any right inner combinator
-    // whose input type is `BC` and
-    // whose output type equals the output type of the left inner combinator
-    T: Combinator<In = BC, Out = S::Out>,
-    // Any type
-    AC: Value,
-    // Any type
-    // whose right subtype equals the right subtype of `AC`
-    BC: Value<B = AC::B>,
+    // The left combinator has
+    // input type A × C and
+    // output type D
+    S: Combinator<In = Product<A, C>>,
+    // The right combinator has
+    // input type B × C and
+    // output type D
+    T: Combinator<In = Product<B, C>, Out = S::Out>,
+    A: Value,
+    B: Value,
+    C: Value,
 {
-    // Input type is product type of:
-    // 1) Sum type of:
-    //    a) Left subtype of input type of left inner combinator
-    //    b) Left subtype of input type of right inner combinator
-    // 2) Right subtype of input type of left inner combinator
-    //    (Equals right subtype of input type of right inner combinator)
-    type In = Product<Sum<AC::A, BC::A>, AC::B>;
-    // Output type is output type of left inner combinator
-    // (Equals output type of right inner combinator)
+    // Case has input type (A + B) × C
+    type In = Product<Sum<A, B>, C>;
+    // Case has output type D
     type Out = S::Out;
 
     const DEPTH: usize = usize_max(S::DEPTH, T::DEPTH) + 1;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
-        // Get left and right inner value of input value
+        // Split input product value
         let (ab, c) = value.split();
         match ab {
-            // Get inner value if `ab` is a left value
+            // Left input value
             Sum::Left(a) => {
-                // Construct input value for left inner combinator
-                let ac = AC::product(a, c)?;
-                // Execute left inner combinator on input value
+                // Construct input for left combinator
+                let ac = Product::<A, C>::Product(a, c);
+                // Execute left combinator
                 let d = self.left.exec(ac)?;
-                // Return output value of left inner combinator
+                // Return output of left combinator
                 Ok(d)
             }
-            // Get inner value if `ab` is a right value
+            // Right input value
             Sum::Right(b) => {
-                // Construct input value for right inner combinator
-                let bc = BC::product(b, c)?;
-                // Execute right inner combinator on input value
+                // Construct input for right combinator
+                let bc = Product::<B, C>::Product(b, c);
+                // Execute right combinator
                 let d = self.right.exec(bc)?;
-                // Return output value of right inner combinator
+                // Return output of right combinator
                 Ok(d)
             }
         }

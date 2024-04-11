@@ -1,5 +1,4 @@
 use crate::display::DisplayDepth;
-use crate::error::Error;
 
 /// Type for a range of values.
 pub trait Value: DisplayDepth + Copy {
@@ -7,10 +6,6 @@ pub trait Value: DisplayDepth + Copy {
     type A: Value;
     /// Right subtype
     type B: Value;
-
-    /// Create a product value of `a` and `b`.
-    /// Fails on non-product types.
-    fn product(a: Self::A, b: Self::B) -> Result<Self, Error>;
 }
 
 /// Atomic unit type.
@@ -83,28 +78,16 @@ impl<A: Copy, B: Copy> Product<A, B> {
 impl Value for Unit {
     type A = Unit;
     type B = Unit;
-
-    fn product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
-        Err(Error::JoinProduct)
-    }
 }
 
 impl<A: Value, B: Value> Value for Sum<A, B> {
     type A = A;
     type B = B;
-
-    fn product(_a: Self::A, _b: Self::B) -> Result<Self, Error> {
-        Err(Error::JoinProduct)
-    }
 }
 
 impl<A: Value, B: Value> Value for Product<A, B> {
     type A = A;
     type B = B;
-
-    fn product(a: Self::A, b: Self::B) -> Result<Self, Error> {
-        Ok(Product::Product(a, b))
-    }
 }
 
 /// Bit type.
