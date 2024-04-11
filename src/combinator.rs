@@ -1,5 +1,6 @@
 use crate::display::DisplayDepth;
 use crate::error::Error;
+use crate::usize_max;
 use crate::value::*;
 use std::marker::PhantomData;
 
@@ -9,6 +10,8 @@ pub trait Combinator: DisplayDepth + Copy {
     type In: Value;
     /// Output type
     type Out: Value;
+    /// Maximum nesting depth of the combinator
+    const DEPTH: usize;
 
     /// Execute the combinator on the given input value.
     /// Return an output value or an error.
@@ -145,6 +148,8 @@ where
     // Output type is always unit type
     type Out = Unit;
 
+    const DEPTH: usize = 0;
+
     fn exec(&self, _value: Self::In) -> Result<Self::Out, Error> {
         // Always return unit value
         Ok(Unit::Unit)
@@ -160,6 +165,8 @@ where
     type In = A;
     // Output type equals input type
     type Out = A;
+
+    const DEPTH: usize = 0;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Always return input value
@@ -180,6 +187,8 @@ where
     type In = Product<T::In, B>;
     // Output type is output type of inner combinator
     type Out = T::Out;
+
+    const DEPTH: usize = T::DEPTH + 1;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get left inner value of product value (ignore the right inner value)
@@ -205,6 +214,8 @@ where
     // Output type is output type of inner combinator
     type Out = T::Out;
 
+    const DEPTH: usize = T::DEPTH + 1;
+
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get right inner value of product value (ignore the left inner value)
         let (_, b) = value.as_product()?;
@@ -229,6 +240,8 @@ where
     // 2) Something which was added (`C`)
     type Out = Sum<T::Out, C>;
 
+    const DEPTH: usize = T::DEPTH + 1;
+
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute inner combinator on input value
         let c = self.inner.exec(value)?;
@@ -250,6 +263,8 @@ where
     // 1) Something which was added (`B`), and
     // 2) Output type of inner combinator
     type Out = Sum<B, T::Out>;
+
+    const DEPTH: usize = T::DEPTH + 1;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute inner combinator on input value
@@ -274,6 +289,8 @@ where
     // 2) Output type of right inner combinator
     type Out = Product<S::Out, T::Out>;
 
+    const DEPTH: usize = usize_max(S::DEPTH, T::DEPTH) + 1;
+
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute left inner combinator on input value
         let b = self.left.exec(value)?;
@@ -296,6 +313,8 @@ where
     type In = S::In;
     // Output type is output type of right inner combinator
     type Out = T::Out;
+
+    const DEPTH: usize = usize_max(S::DEPTH, T::DEPTH) + 1;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Execute left inner combinator on input value
@@ -332,6 +351,8 @@ where
     // Output type is output type of left inner combinator
     // (Equals output type of right inner combinator)
     type Out = S::Out;
+
+    const DEPTH: usize = usize_max(S::DEPTH, T::DEPTH) + 1;
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get left and right inner value of input value
