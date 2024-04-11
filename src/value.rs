@@ -1,12 +1,7 @@
 use crate::display::DisplayDepth;
 
 /// Type for a range of values.
-pub trait Value: DisplayDepth + Copy {
-    /// Left subtype
-    type A: Value;
-    /// Right subtype
-    type B: Value;
-}
+pub trait Value: DisplayDepth + Copy {}
 
 /// Atomic unit type.
 ///
@@ -75,20 +70,11 @@ impl<A: Copy, B: Copy> Product<A, B> {
     }
 }
 
-impl Value for Unit {
-    type A = Unit;
-    type B = Unit;
-}
+impl Value for Unit {}
 
-impl<A: Value, B: Value> Value for Sum<A, B> {
-    type A = A;
-    type B = B;
-}
+impl<A: Value, B: Value> Value for Sum<A, B> {}
 
-impl<A: Value, B: Value> Value for Product<A, B> {
-    type A = A;
-    type B = B;
-}
+impl<A: Value, B: Value> Value for Product<A, B> {}
 
 /// Bit type.
 ///
