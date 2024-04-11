@@ -192,9 +192,9 @@ where
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get left inner value of product value (ignore the right inner value)
-        let (a, _) = value.as_product()?;
+        let a = value.split().0;
         // Execute inner combinator on left inner value
-        let c = self.inner.exec(*a)?;
+        let c = self.inner.exec(a)?;
         // Return output of inner combinator
         Ok(c)
     }
@@ -218,9 +218,9 @@ where
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get right inner value of product value (ignore the left inner value)
-        let (_, b) = value.as_product()?;
+        let b = value.split().1;
         // Execute inner combinator on right inner value
-        let c = self.inner.exec(*b)?;
+        let c = self.inner.exec(b)?;
         // Return output of inner combinator
         Ok(c)
     }
@@ -356,27 +356,26 @@ where
 
     fn exec(&self, value: Self::In) -> Result<Self::Out, Error> {
         // Get left and right inner value of input value
-        let (ab, c) = value.as_product()?;
-        // Get inner value if `ab` is a left value
-        if let Ok(a) = ab.as_left() {
-            // Construct input value for left inner combinator
-            let ac = AC::product(*a, *c)?;
-            // Execute left inner combinator on input value
-            let d = self.left.exec(ac)?;
-            // Return output value of left inner combinator
-            Ok(d)
-        // Get inner value if `ab` is a right value
-        } else if let Ok(b) = ab.as_right() {
-            // Construct input value for right inner combinator
-            let bc = BC::product(*b, *c)?;
-            // Execute right inner combinator on input value
-            let d = self.right.exec(bc)?;
-            // Return output value of right inner combinator
-            Ok(d)
-        // `ab` has to be either left or right value
-        } else {
-            // Unreachable if input value has correct input type
-            Err(Error::CaseSum)
+        let (ab, c) = value.split();
+        match ab {
+            // Get inner value if `ab` is a left value
+            Sum::Left(a) => {
+                // Construct input value for left inner combinator
+                let ac = AC::product(a, c)?;
+                // Execute left inner combinator on input value
+                let d = self.left.exec(ac)?;
+                // Return output value of left inner combinator
+                Ok(d)
+            }
+            // Get inner value if `ab` is a right value
+            Sum::Right(b) => {
+                // Construct input value for right inner combinator
+                let bc = BC::product(b, c)?;
+                // Execute right inner combinator on input value
+                let d = self.right.exec(bc)?;
+                // Return output value of right inner combinator
+                Ok(d)
+            }
         }
     }
 }

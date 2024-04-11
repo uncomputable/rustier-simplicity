@@ -26,7 +26,7 @@ fn main() {
         .exec(Product::Product(Unit::Unit, acc_in))
         .unwrap();
     // The loop output is the final accumulator
-    let acc_out = res.as_right().unwrap();
+    let acc_out = res.unwrap_right();
     // The final accumulator is the sum of all counter values
-    assert_eq!(32640, u16::from(acc_out));
+    assert_eq!(32640, u16::from(&acc_out));
 }
